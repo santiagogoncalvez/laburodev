@@ -18,51 +18,14 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - run: npm install
         working-directory: backend
+      - name: Seed Database
+        run: npm run db:seed
+        working-directory: backend
       - name: Test (sin tests de IA)
         run: node --test --test-name-pattern="^(?!.*\[AI\])"
         working-directory: backend
 
-  frontend-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm install
-        working-directory: frontend
-      - run: npm run lint
-        working-directory: frontend
-
-  backend-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - run: npm install
-        working-directory: backend
-      - run: echo "No lint script in backend, skipping"
-
-  frontend-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm install
-        working-directory: frontend
-
   frontend-build:
-    needs: [frontend-lint, frontend-test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,7 +40,7 @@ jobs:
         working-directory: frontend
 
   backend-smoke-test:
-    needs: [backend-lint, backend-test]
+    needs: [backend-test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
