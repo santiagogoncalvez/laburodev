@@ -25,6 +25,10 @@ app.use(generalLimiter);
 app.use("/jobs", jobsRouter);
 app.use("/ai", aiRouter);
 
+app.get("/health", (req, res) => {
+   res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 app.use((req, res) => {
    res.status(404).json({ message: "Not found" });
 });

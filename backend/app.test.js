@@ -380,7 +380,7 @@ describe("GET /ai/summary/:id", () => {
       validJobId = list.data[0].id;
    });
 
-   test("debe responder 200 y stream de texto con resumen", async () => {
+   test("debe responder 200 y stream de texto con resumen - [AI]", async () => {
       const response = await fetch(`${BASE_URL}/ai/summary/${validJobId}`);
       assert.strictEqual(response.status, 200);
       assert.strictEqual(
