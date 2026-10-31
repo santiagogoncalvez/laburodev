@@ -1,0 +1,10 @@
+.searchResults {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: var(--space-4) var(--gutter) var(--space-5);
+}
+
+.resultCount {
+  color: var(--text-2);
+  margin-bottom: var(--space-4);
+}

@@ -1,0 +1,43 @@
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block: var(--space-5);
+}
+
+.pagination a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding-inline: 0.5rem;
+  text-decoration: none;
+  color: var(--text-2);
+  font-weight: 500;
+  border-radius: var(--r-full);
+}
+
+.pagination a:hover {
+  background-color: var(--bg-soft);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  color: var(--text-2);
+  user-select: none;
+}
+
+/* a.isActive: especificidad mayor que .pagination a para que aplique el color */
+.pagination a.isActive {
+  background-color: var(--accent);
+  color: var(--accent-ink);
+  pointer-events: none;
+}
