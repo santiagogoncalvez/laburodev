@@ -25,8 +25,6 @@ after(async () => {
             if (err) reject(err);
             else resolve();
          });
-         // Forzar cierre si no termina en 2 segundos
-         setTimeout(() => resolve(), 2000);
       });
    }
 });

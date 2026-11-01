@@ -22,7 +22,7 @@ jobs:
         run: npm run db:seed
         working-directory: backend
       - name: Test (sin tests de IA)
-        run: node --test --test-skip-pattern="AI"
+        run: node --test --test-skip-pattern="AI" --test-force-exit
         working-directory: backend
 
   frontend-build:
