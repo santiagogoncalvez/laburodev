@@ -25,6 +25,10 @@ export class JobModel {
          params.push(modality);
       }
 
+      const countSql = sql.replace("SELECT *", "SELECT COUNT(*) as count");
+      const countResult = await db.execute({ sql: countSql, args: params.slice(0, -2) });
+      const total = Number(countResult.rows[0].count);
+
       sql += " LIMIT ? OFFSET ?";
       params.push(Number(limit ?? 10), Number(offset ?? 0));
 
@@ -50,7 +54,7 @@ export class JobModel {
                about: row.about,
             },
          })),
-         total: rows.length,
+         total: total,
          limit: Number(limit ?? 10),
          offset: Number(offset ?? 0),
       };
@@ -87,23 +91,25 @@ export class JobModel {
 
    static async create (inputData) {
       const id = crypto.randomUUID();
-      const title = String(inputData.title ?? "");
-      const company = String(inputData.company ?? "");
-      const location = String(inputData.location ?? "");
-      const level = String(inputData.data?.level ?? inputData.level ?? "Junior");
-      const modality = String(inputData.data?.modality ?? inputData.modality ?? "remoto");
-      const technology = JSON.stringify(inputData.data?.technology ?? inputData.technology ?? []);
-      const description = String(inputData.content?.description ?? inputData.description ?? "");
-      const responsibilities = JSON.stringify(inputData.content?.responsibilities ?? inputData.responsibilities ?? []);
-      const requirements = JSON.stringify(inputData.content?.requirements ?? inputData.requirements ?? []);
-      const about = String(inputData.content?.about ?? inputData.about ?? "");
+      
+      const { title, company, location, data, content } = inputData;
+      const { technology, mode, level } = data;
+      const { description, responsibilities, requirements, about } = content || {};
+
+      // Normalización: asegurar que los campos sean strings para la DB
+      const techStr = JSON.stringify(Array.isArray(technology) ? technology : [technology]);
+      const respStr = JSON.stringify(Array.isArray(responsibilities) ? responsibilities : [responsibilities]);
+      const reqStr = JSON.stringify(Array.isArray(requirements) ? requirements : [requirements]);
 
       await db.execute({
          sql: `
             INSERT INTO jobs (id, title, company, location, level, modality, technology, description, responsibilities, requirements, about)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          `,
-         args: [id, title, company, location, level, modality, technology, description, responsibilities, requirements, about],
+         args: [
+            id, title, company, location ?? "", level, mode ?? "remoto", 
+            techStr, description ?? "", respStr, reqStr, about ?? ""
+         ],
       });
 
       return this.getById(id);
@@ -113,26 +119,42 @@ export class JobModel {
       const existing = await this.getById(id);
       if (!existing) return null;
 
-      const title = String(inputData.title ?? existing.title);
-      const company = String(inputData.company ?? existing.company);
-      const location = String(inputData.location ?? existing.location);
-      const level = String(inputData.data?.level ?? existing.data.level);
-      const modality = String(inputData.data?.modality ?? existing.data.modality);
-      const technology = JSON.stringify(inputData.data?.technology ?? existing.data.technology ?? []);
-      const description = String(inputData.content?.description ?? existing.content.description);
-      const responsibilities = JSON.stringify(inputData.content?.responsibilities ?? existing.content.responsibilities);
-      const requirements = JSON.stringify(inputData.content?.requirements ?? existing.content.requirements);
-      const about = String(inputData.content?.about ?? existing.content.about);
+      const { title, company, location, data, content } = inputData;
+      const { technology, mode, level } = data || {};
+      const { description, responsibilities, requirements, about } = content || {};
+
+      const techStr = technology ? JSON.stringify(Array.isArray(technology) ? technology : [technology]) : null;
+      const respStr = responsibilities ? JSON.stringify(Array.isArray(responsibilities) ? responsibilities : [responsibilities]) : null;
+      const reqStr = requirements ? JSON.stringify(Array.isArray(requirements) ? requirements : [requirements]) : null;
 
       await db.execute({
          sql: `
             UPDATE jobs
-            SET title = ?, company = ?, location = ?, level = ?, modality = ?, technology = ?,
-                description = ?, responsibilities = ?,
-                requirements = ?, about = ?
+            SET title = COALESCE(?, title), 
+                company = COALESCE(?, company), 
+                location = COALESCE(?, location), 
+                level = COALESCE(?, level), 
+                modality = COALESCE(?, modality), 
+                technology = COALESCE(?, technology),
+                description = COALESCE(?, description), 
+                responsibilities = COALESCE(?, responsibilities),
+                requirements = COALESCE(?, requirements), 
+                about = COALESCE(?, about)
             WHERE id = ?
          `,
-         args: [title, company, location, level, modality, technology, description, responsibilities, requirements, about, String(id)],
+         args: [
+            title ?? null, 
+            company ?? null, 
+            location ?? null, 
+            level ?? null, 
+            mode ?? null, 
+            techStr, 
+            description ?? null, 
+            respStr, 
+            reqStr, 
+            about ?? null, 
+            String(id)
+         ],
       });
 
       return this.getById(id);

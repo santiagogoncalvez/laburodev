@@ -9,7 +9,7 @@ import { Skeleton } from '../components/Skeleton.jsx'
 import { API_URL } from '../config.js'
 import styles from './Search.module.css'
 
-const RESULTS_PER_PAGE = 4
+const RESULTS_PER_PAGE = 10
 
 const useFilters = () => {
   const [searchParams, setSearchParams] = useSearchParams()

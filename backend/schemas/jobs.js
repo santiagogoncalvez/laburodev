@@ -37,8 +37,8 @@ const dataSchema = z.object({
 
 const contentSchema = z.object({
    description: z.string().optional(),
-   responsibilities: z.string().optional(),
-   requirements: z.string().optional(),
+   responsibilities: z.array(z.string()).optional(),
+   requirements: z.array(z.string()).optional(),
    about: z.string().optional(),
 });
 

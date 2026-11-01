@@ -87,10 +87,7 @@ export class JobController {
          return validationError(res, result);
       }
 
-      const updatedJob = await JobModel.update({
-         id,
-         ...result.data,
-      });
+      const updatedJob = await JobModel.update(id, result.data);
 
       if (!updatedJob) {
          return res.status(404).json({ message: "Job not found" });
@@ -123,10 +120,7 @@ export class JobController {
          return validationError(res, result);
       }
 
-      const updatedJob = await JobModel.partialUpdate({
-         id,
-         ...result.data,
-      });
+      const updatedJob = await JobModel.partialUpdate(id, result.data);
 
       if (!updatedJob) {
          return res.status(404).json({ message: "Job not found" });

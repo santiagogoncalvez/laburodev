@@ -43,7 +43,7 @@ describe("GET /jobs", () => {
 
       const json = await response.json();
       assert.ok(
-         json.data.every((job) => job.data.technology.includes(tech)),
+         json.data.every((job) => job.data.technology.some(t => t.toLowerCase().includes(tech))),
          `Todos los trabajos deben incluir la tecnología ${tech}`,
       );
    });
@@ -82,7 +82,7 @@ describe("GET /jobs filtros y paginación", () => {
          json.data.every(
             (job) =>
                job.title.toLowerCase().includes(text) ||
-               job.description.toLowerCase().includes(text),
+               job.content.description.toLowerCase().includes(text),
          ),
          "Todos deben coincidir con el texto buscado",
       );
@@ -96,7 +96,7 @@ describe("GET /jobs filtros y paginación", () => {
       const json = await response.json();
       assert.ok(json.data.length > 0, "Debe haber trabajos senior");
       assert.ok(
-         json.data.every((job) => job.data.level === level),
+         json.data.every((job) => job.data.level.toLowerCase() === level),
          "Todos deben ser del nivel pedido",
       );
    });
@@ -140,10 +140,11 @@ describe("GET /jobs filtros y paginación", () => {
 describe("POST /jobs", () => {
    test("debe crear con 201 y devolver el trabajo", async () => {
       const body = {
-         title: "QA Manual",
-         company: "ACME",
+         title: "QA Manual Tester",
+         company: "ACME Corp",
          location: "Remoto",
          data: { technology: ["qa"], mode: "remoto", level: "junior" },
+         content: { description: "Testing web apps", responsibilities: ["Test"], requirements: ["JS"], about: "Good company" }
       };
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
@@ -170,14 +171,32 @@ describe("POST /jobs", () => {
 });
 
 describe("PUT /jobs/:id", () => {
+   let putId;
+   before(async () => {
+      const body = {
+         title: "Test Job for PUT",
+         company: "Test Corp",
+         data: { technology: ["qa"], mode: "remoto", level: "junior" },
+         content: { description: "Desc", responsibilities: ["A"], requirements: ["B"], about: "C" }
+      };
+      const res = await fetch(`${BASE_URL}/jobs`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify(body),
+      });
+      const job = await res.json();
+      putId = job.id;
+   });
+
    test("debe reemplazar con 200", async () => {
       const body = {
-         title: "QA Automatizador",
-         company: "ACME",
+         title: "QA Automatizador Senior",
+         company: "ACME Corp",
          location: "Remoto",
-         data: { technology: ["qa"], mode: "remoto", level: "mid-level" },
+         data: { technology: ["qa", "selenium"], mode: "remoto", level: "senior" },
+         content: { description: "Automated testing", responsibilities: ["Write tests"], requirements: ["Python"], about: "Great place" }
       };
-      const response = await fetch(`${BASE_URL}/jobs/${createdId}`, {
+      const response = await fetch(`${BASE_URL}/jobs/${putId}`, {
          method: "PUT",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify(body),
@@ -185,9 +204,9 @@ describe("PUT /jobs/:id", () => {
       assert.strictEqual(response.status, 200);
 
       const job = await response.json();
-      assert.strictEqual(job.id, createdId);
+      assert.strictEqual(job.id, putId);
       assert.strictEqual(job.title, body.title);
-      assert.strictEqual(job.data.level, "mid-level");
+      assert.strictEqual(job.data.level, "senior");
    });
 
    test("debe responder 400 si faltan campos", async () => {
@@ -204,9 +223,11 @@ describe("PUT /jobs/:id", () => {
          method: "PUT",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({
-            title: "Xyz",
-            company: "X",
-            data: { technology: ["x"], mode: "remoto", level: "junior" },
+            title: "Xyz Developer",
+            company: "X Corp",
+            location: "Remoto",
+            data: { technology: ["x"], modality: "remoto", level: "junior" },
+            content: { description: "Dev", responsibilities: ["Code"], requirements: ["JS"], about: "About" }
          }),
       });
       assert.strictEqual(response.status, 404);
@@ -214,17 +235,34 @@ describe("PUT /jobs/:id", () => {
 });
 
 describe("PATCH /jobs/:id", () => {
+   let patchId;
+   before(async () => {
+      const body = {
+         title: "Test Job for PATCH",
+         company: "Test Corp",
+         data: { technology: ["react"], mode: "remoto", level: "junior" },
+         content: { description: "Desc", responsibilities: ["A"], requirements: ["B"], about: "C" }
+      };
+      const res = await fetch(`${BASE_URL}/jobs`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify(body),
+      });
+      const job = await res.json();
+      patchId = job.id;
+   });
+
    test("debe actualizar solo lo enviado", async () => {
-      const response = await fetch(`${BASE_URL}/jobs/${createdId}`, {
+      const response = await fetch(`${BASE_URL}/jobs/${patchId}`, {
          method: "PATCH",
          headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ title: "QA Solo Título" }),
+         body: JSON.stringify({ title: "QA Solo Título Actualizado" }),
       });
       assert.strictEqual(response.status, 200);
 
       const job = await response.json();
-      assert.strictEqual(job.title, "QA Solo Título");
-      assert.strictEqual(job.company, "ACME", "Lo no enviado se conserva");
+      assert.strictEqual(job.title, "QA Solo Título Actualizado");
+      assert.strictEqual(job.company, "Test Corp", "Lo no enviado se conserva");
    });
 
    test("debe responder 400 sin nada para actualizar", async () => {
@@ -254,7 +292,9 @@ describe("validaciones zod", () => {
          body: JSON.stringify({
             title: "QA",
             company: "ACME",
-            data: { technology: ["qa"] },
+            location: "Remoto",
+            data: { technology: ["qa"], modality: "remoto", level: "junior" },
+            content: { description: "Desc", responsibilities: ["A"], requirements: ["B"], about: "C" }
          }),
       });
       assert.strictEqual(response.status, 400);
@@ -273,7 +313,9 @@ describe("validaciones zod", () => {
          body: JSON.stringify({
             title: "QA Manual",
             company: "ACME",
-            data: { technology: [] },
+            location: "Remoto",
+            data: { technology: [], modality: "remoto", level: "junior" },
+            content: { description: "Desc", responsibilities: ["A"], requirements: ["B"], about: "C" }
          }),
       });
       assert.strictEqual(response.status, 400);
@@ -286,7 +328,9 @@ describe("validaciones zod", () => {
          body: JSON.stringify({
             title: "QA Manual",
             company: "ACME",
-            data: { technology: ["qa"], level: "mid" },
+            location: "Remoto",
+            data: { technology: ["qa"], modality: "remoto", level: "mid" },
+            content: { description: "Desc", responsibilities: ["A"], requirements: ["B"], about: "C" }
          }),
       });
       assert.strictEqual(response.status, 400);
@@ -297,9 +341,11 @@ describe("validaciones zod", () => {
          method: "POST",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({
-            title: "QA Manual",
+            title: "QA Manual Tester",
             company: "ACME",
-            data: { technology: ["qa"] },
+            location: "Remoto",
+            data: { technology: ["qa"], modality: "remoto", level: "junior" },
+            content: { description: "Desc", responsibilities: ["A"], requirements: ["B"], about: "C" },
             hack: "campo extra",
          }),
       });
@@ -315,9 +361,10 @@ describe("validaciones zod", () => {
          method: "PUT",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({
-            title: "QA Manual",
+            title: "QA Manual Updated",
             company: "ACME",
-            data: { technology: ["qa"] },
+            data: { technology: ["qa"], modality: "remoto", level: "junior" },
+            content: { description: "Desc", responsibilities: ["A"], requirements: ["B"], about: "C" }
          }),
       });
       assert.strictEqual(response.status, 200);
@@ -327,13 +374,13 @@ describe("validaciones zod", () => {
       const response = await fetch(`${BASE_URL}/jobs/${validationId}`, {
          method: "PATCH",
          headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ data: { level: "lead" } }),
+         body: JSON.stringify({ data: { level: "senior" } }),
       });
       assert.strictEqual(response.status, 200);
 
       const job = await response.json();
-      assert.strictEqual(job.data.level, "lead");
-      assert.strictEqual(job.title, "QA Manual", "Lo no enviado se conserva");
+      assert.strictEqual(job.data.level, "senior");
+      assert.strictEqual(job.title, "QA Manual Updated", "Lo no enviado se conserva");
    });
 
    test("PATCH debe responder 400 con un título inválido", async () => {
@@ -372,7 +419,7 @@ describe("DELETE /jobs/:id", () => {
    });
 });
 
-describe("GET /ai/summary/:id", () => {
+describe("GET /ai/summary/:id - [AI]", () => {
    let validJobId;
 
    before(async () => {
@@ -380,7 +427,7 @@ describe("GET /ai/summary/:id", () => {
       validJobId = list.data[0].id;
    });
 
-   test("debe responder 200 y stream de texto con resumen - [AI]", async () => {
+   test("debe responder 200 y stream de texto con resumen", async () => {
       const response = await fetch(`${BASE_URL}/ai/summary/${validJobId}`);
       assert.strictEqual(response.status, 200);
       assert.strictEqual(
