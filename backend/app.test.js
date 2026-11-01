@@ -19,12 +19,16 @@ before(async () => {
 
 // despues de cada test se cierra el servidor
 after(async () => {
-   return new Promise((resolve, reject) => {
-      server.close((err) => {
-         if (err) reject(err);
-         resolve();
+   if (server) {
+      return new Promise((resolve, reject) => {
+         server.close((err) => {
+            if (err) reject(err);
+            else resolve();
+         });
+         // Forzar cierre si no termina en 2 segundos
+         setTimeout(() => resolve(), 2000);
       });
-   });
+   }
 });
 
 describe("GET /jobs", () => {
