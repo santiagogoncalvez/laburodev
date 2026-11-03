@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   backend-test:
     runs-on: ubuntu-latest
@@ -16,7 +19,7 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: backend/package-lock.json
-      - run: npm install
+      - run: npm ci
         working-directory: backend
       - name: Seed Database
         run: npm run db:seed
@@ -34,7 +37,7 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm install
+      - run: npm ci
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
@@ -49,7 +52,7 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: backend/package-lock.json
-      - run: npm install
+      - run: npm ci
         working-directory: backend
       - name: Smoke test
         run: |
@@ -60,7 +63,11 @@ jobs:
 
   deploy-frontend:
     needs: [frontend-build]
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-frontend
+      cancel-in-progress: false
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
@@ -99,7 +106,11 @@ jobs:
 
   deploy-backend:
     needs: [backend-smoke-test]
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-backend
+      cancel-in-progress: false
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
