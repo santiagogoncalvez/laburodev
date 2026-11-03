@@ -72,7 +72,7 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
           working-directory: frontend
-          vercel-args: '--prod'
+          vercel-args: '--prod --yes'
 
   deploy-backend:
     needs: [backend-smoke-test]
@@ -88,4 +88,4 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
           working-directory: backend
-          vercel-args: '--prod'
+          vercel-args: '--prod --yes'
