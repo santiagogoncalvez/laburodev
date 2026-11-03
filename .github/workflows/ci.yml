@@ -67,12 +67,15 @@ jobs:
         run: rm -rf .vercel
         working-directory: frontend
       - uses: amondnet/vercel-action@v25
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
           working-directory: frontend
-          vercel-args: '--prod --yes'
+          vercel-args: '--prod'
 
   deploy-backend:
     needs: [backend-smoke-test]
@@ -83,9 +86,12 @@ jobs:
         run: rm -rf .vercel
         working-directory: backend
       - uses: amondnet/vercel-action@v25
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN_BACKEND }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
           working-directory: backend
-          vercel-args: '--prod --yes'
+          vercel-args: '--prod'
