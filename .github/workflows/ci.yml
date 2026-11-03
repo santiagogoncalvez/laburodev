@@ -81,7 +81,7 @@ jobs:
             cat /tmp/proyecto.json
             exit 1
           fi
-          echo "Proyecto accesible: $(jq -r .name /tmp/proyecto.json) · $(jq -r .id /tmp/proyecto.json)"
+          echo "Proyecto: $(jq -r .name /tmp/proyecto.json) · id $(jq -r .id /tmp/proyecto.json) · rootDirectory: $(jq -r '.rootDirectory // "(vacío)"' /tmp/proyecto.json)"
       - name: Vincular proyecto
         run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
         env:
@@ -116,7 +116,7 @@ jobs:
             cat /tmp/proyecto.json
             exit 1
           fi
-          echo "Proyecto accesible: $(jq -r .name /tmp/proyecto.json) · $(jq -r .id /tmp/proyecto.json)"
+          echo "Proyecto: $(jq -r .name /tmp/proyecto.json) · id $(jq -r .id /tmp/proyecto.json) · rootDirectory: $(jq -r '.rootDirectory // "(vacío)"' /tmp/proyecto.json)"
       - name: Vincular proyecto
         run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
         env:
