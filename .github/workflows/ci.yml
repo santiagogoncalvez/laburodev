@@ -68,15 +68,29 @@ jobs:
       - uses: actions/checkout@v4
       - name: Instalar Vercel CLI
         run: npm install --global vercel@latest
-      - name: Diagnóstico de credenciales
+      - name: Validar token contra el proyecto
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
         run: |
-          vercel whoami --token=${{ secrets.VERCEL_TOKEN_FRONTEND }}
-          vercel project ls --token=${{ secrets.VERCEL_TOKEN_FRONTEND }}
+          code=$(curl -s -o /tmp/proyecto.json -w "%{http_code}" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID")
+          echo "GET /v9/projects/{id} → HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "Respuesta de Vercel:"
+            cat /tmp/proyecto.json
+            exit 1
+          fi
+          echo "Proyecto accesible: $(jq -r .name /tmp/proyecto.json) · $(jq -r .id /tmp/proyecto.json)"
       - name: Vincular proyecto
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN_FRONTEND }}
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
         working-directory: frontend
       - name: Deploy a producción
-        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN_FRONTEND }}
+        run: vercel deploy --prod --token=$VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
         working-directory: frontend
 
   deploy-backend:
@@ -89,13 +103,27 @@ jobs:
       - uses: actions/checkout@v4
       - name: Instalar Vercel CLI
         run: npm install --global vercel@latest
-      - name: Diagnóstico de credenciales
+      - name: Validar token contra el proyecto
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_BACKEND }}
         run: |
-          vercel whoami --token=${{ secrets.VERCEL_TOKEN_BACKEND }}
-          vercel project ls --token=${{ secrets.VERCEL_TOKEN_BACKEND }}
+          code=$(curl -s -o /tmp/proyecto.json -w "%{http_code}" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID")
+          echo "GET /v9/projects/{id} → HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "Respuesta de Vercel:"
+            cat /tmp/proyecto.json
+            exit 1
+          fi
+          echo "Proyecto accesible: $(jq -r .name /tmp/proyecto.json) · $(jq -r .id /tmp/proyecto.json)"
       - name: Vincular proyecto
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN_BACKEND }}
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_BACKEND }}
         working-directory: backend
       - name: Deploy a producción
-        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN_BACKEND }}
+        run: vercel deploy --prod --token=$VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_BACKEND }}
         working-directory: backend
