@@ -61,37 +61,41 @@ jobs:
   deploy-frontend:
     needs: [frontend-build]
     runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
     steps:
       - uses: actions/checkout@v4
-      - name: Limpiar configuración Vercel
-        run: rm -rf .vercel
+      - name: Instalar Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Diagnóstico de credenciales
+        run: |
+          vercel whoami --token=${{ secrets.VERCEL_TOKEN_FRONTEND }}
+          vercel project ls --token=${{ secrets.VERCEL_TOKEN_FRONTEND }}
+      - name: Vincular proyecto
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN_FRONTEND }}
         working-directory: frontend
-      - uses: amondnet/vercel-action@v25
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
-          working-directory: frontend
-          vercel-args: '--prod'
+      - name: Deploy a producción
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN_FRONTEND }}
+        working-directory: frontend
 
   deploy-backend:
     needs: [backend-smoke-test]
     runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
     steps:
       - uses: actions/checkout@v4
-      - name: Limpiar configuración Vercel
-        run: rm -rf .vercel
+      - name: Instalar Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Diagnóstico de credenciales
+        run: |
+          vercel whoami --token=${{ secrets.VERCEL_TOKEN_BACKEND }}
+          vercel project ls --token=${{ secrets.VERCEL_TOKEN_BACKEND }}
+      - name: Vincular proyecto
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN_BACKEND }}
         working-directory: backend
-      - uses: amondnet/vercel-action@v25
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN_BACKEND }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
-          working-directory: backend
-          vercel-args: '--prod'
+      - name: Deploy a producción
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN_BACKEND }}
+        working-directory: backend
