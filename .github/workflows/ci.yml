@@ -12,6 +12,8 @@ permissions:
 jobs:
   backend-test:
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,7 +27,7 @@ jobs:
         run: npm run db:seed
         working-directory: backend
       - name: Test (sin tests de IA)
-        run: NODE_ENV=test node --test --test-skip-pattern="AI"
+        run: node --test --test-skip-pattern="AI"
         working-directory: backend
 
   frontend-build:
