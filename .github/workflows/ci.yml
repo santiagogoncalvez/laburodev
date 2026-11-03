@@ -63,6 +63,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Limpiar configuración Vercel
+        run: rm -rf .vercel
+        working-directory: frontend
       - uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
@@ -76,6 +79,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Limpiar configuración Vercel
+        run: rm -rf .vercel
+        working-directory: backend
       - uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN_BACKEND }}
