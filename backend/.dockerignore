@@ -1,0 +1,9 @@
+# Secretos: .env NUNCA entra en la imagen
+.env
+.env.*
+
+# Artefactos locales
+node_modules
+local.db
+*.log
+npm-debug.log*
