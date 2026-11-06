@@ -49,19 +49,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - run: npm ci
-        working-directory: backend
+      - name: Build image
+        run: docker build -t laburodev-api backend
       - name: Smoke test
         run: |
-          node app.js &
+          docker run -d --name api -p 3000:3000 laburodev-api
           sleep 5
           curl -f http://localhost:3000/health
-        working-directory: backend
+      - name: Container logs (si falla)
+        if: failure()
+        run: docker logs api
 
   deploy-frontend:
     needs: [frontend-build]
