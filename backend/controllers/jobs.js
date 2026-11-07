@@ -1,4 +1,4 @@
-import { JobModel } from "../models/jobs.js";
+import { JobService } from "../services/jobsService.js";
 import { DEFAULTS } from "../config.js";
 import { validateJob, validatePartialJob } from "../schemas/jobs.js";
 
@@ -36,7 +36,7 @@ export class JobController {
          total,
          limit: responseLimit,
          offset: responseOffset,
-      } = await JobModel.getAll({
+      } = await JobService.getAll({
          search: text,
          level,
          technology,
@@ -56,7 +56,7 @@ export class JobController {
    static async getId(req, res) {
       const { id } = req.params;
 
-      const job = await JobModel.getById(id);
+      const job = await JobService.getById(id);
 
       if (!job) {
          return res.status(404).json({ message: "Job not found" });
@@ -72,13 +72,12 @@ export class JobController {
          return validationError(res, result);
       }
 
-      const newJob = await JobModel.create(result.data);
+      const newJob = await JobService.create(result.data);
 
       return res.status(201).json(newJob);
    }
 
    static async update(req, res) {
-      // Extraemos el id de los parámetros de la URL
       const { id } = req.params;
 
       const result = validateJob(req.body);
@@ -87,7 +86,7 @@ export class JobController {
          return validationError(res, result);
       }
 
-      const updatedJob = await JobModel.update(id, result.data);
+      const updatedJob = await JobService.update(id, result.data);
 
       if (!updatedJob) {
          return res.status(404).json({ message: "Job not found" });
@@ -97,10 +96,8 @@ export class JobController {
    }
 
    static async partialUpdate(req, res) {
-      // Extraemos el id de los parámetros de la URL
       const { id } = req.params;
 
-      // Extraemos los datos del body enviado por el cliente
       const { title, company, location, description, data, content } = req.body;
 
       if (
@@ -120,7 +117,7 @@ export class JobController {
          return validationError(res, result);
       }
 
-      const updatedJob = await JobModel.partialUpdate(id, result.data);
+      const updatedJob = await JobService.partialUpdate(id, result.data);
 
       if (!updatedJob) {
          return res.status(404).json({ message: "Job not found" });
@@ -132,7 +129,7 @@ export class JobController {
    static async delete(req, res) {
       const { id } = req.params;
 
-      const deleted = await JobModel.delete(id);
+      const deleted = await JobService.delete(id);
 
       if (!deleted) {
          return res.status(404).json({ message: "Job not found" });

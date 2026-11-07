@@ -1,0 +1,25 @@
+# Imagen del backend para Vercel Container Runtime (Docker punto 2 — Fase 0).
+# Multi-stage identica al Dockerfile, con dos diferencias:
+#   1. ENV NODE_ENV=production: app.js NO hace listen() (guard serverless), asi que
+#      el unico que escucha es server.js. Sin esto, en local el guard pasaria y habria
+#      doble listen() (EADDRINUSE).
+#   2. CMD node server.js (el entrypoint que siempre escucha).
+# app.js NO se toca. El CI sigue construyendo el Dockerfile (CMD node app.js).
+FROM node:24-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+FROM node:24-alpine AS runner
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+# node solo necesita escribir en /app (crea local.db si no hay TURSO_DATABASE_URL)
+RUN chown node:node /app
+
+# Vercel envia trafico al puerto 80 por defecto; PORT se puede setear en project
+# settings. Localmente sin PORT: 3000 (mismo criterio que app.js / config.js).
+ENV NODE_ENV=production
+EXPOSE 3000
+USER node
+CMD ["node", "server.js"]

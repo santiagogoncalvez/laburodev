@@ -20,8 +20,9 @@ npm run db:seed        # crea esquema + importa jobs.json (correr antes que los 
 npm run db:reset       # dropea la tabla y vuelve a seedear
 
 # Docker (desde laburodev/backend/)
-docker build -t laburodev-api .            # imagen multi-stage (node:24-alpine)
-docker run --rm -p 3000:3000 laburodev-api # API en :3000 (sin setear NODE_ENV: ver gotcha abajo)
+docker build -f Dockerfile.vercel -t laburodev-api . # imagen que usan CI y Vercel (CMD server.js, ENV NODE_ENV=production)
+docker run --rm -p 3000:3000 laburodev-api # API en :3000
+docker run --rm -p 3000:3000 --env-file .env -e NODE_ENV=production laburodev-api # con Turso/Gemini locales (el -e es obligatorio: ver gotcha)
 docker exec <contenedor> npm run db:seed   # seed adentro del contenedor (la DB es efímera sin volume)
 
 # Frontend (desde laburodev/frontend/)
@@ -37,7 +38,7 @@ En PowerShell usar `npm.cmd` si la policy de ejecución bloquea `npm` (falla con
 ## Tests backend — gotchas verificados
 
 - **Siempre correr con `NODE_ENV=test`**: `app.js` hace `listen()` cuando NODE_ENV no es `test`/`production` y el proceso **queda colgado** después de los tests. En PowerShell: `$env:NODE_ENV='test'; npm.cmd test`.
-- **En el contenedor Docker pasa al revés**: `docker run` corre con NODE_ENV sin setear (correcto, escucha en `:3000`); si seteás `NODE_ENV=production` **no hace `listen()`** y el contenedor levanta mudo (guard serverless de Vercel).
+- **Gotcha `NODE_ENV` en contenedores** (clave, verificado): `Dockerfile.vercel` setea `ENV NODE_ENV=production` y arranca `server.js`, que **siempre hace `listen()`** (es el entrypoint para Vercel). Pero `app.js` también escucha si `NODE_ENV` no es `production`/`test`: si corrés con `--env-file .env` y tu `.env` tiene `NODE_ENV=development`, ese valor **pisa** el de la imagen → doble `listen()` → crash `EADDRINUSE`. Solución: `-e NODE_ENV=production` en el `docker run` (el flag CLI gana sobre `--env-file`). En tests nativos pasa al revés: se necesita `NODE_ENV=test` para que `app.js` NO escuche (el test levanta su server en `:3001`).
 - La suite depende de datos sembrados (`GET /jobs` espera filas): correr `npm run db:seed` si la DB está recién creada.
 - Los tests de IA (suite `[AI]`) llaman a Gemini real con `GOOGLE_GENERATIVE_AI_API_KEY` del `.env`. CI los salta con `node --test --test-skip-pattern="AI"`.
 - El server de tests corre en `:3001` (importa `app.js`, que no escucha bajo `NODE_ENV=test`, y lo levanta el `before()` del test).
@@ -94,7 +95,7 @@ Gotchas de Stagehand v4:
 
 1. `backend-test`: `npm ci` → `npm run db:seed` → `node --test --test-skip-pattern="AI"` con `NODE_ENV: test`.
 2. `frontend-build`: `npm ci` → `npm run build`.
-3. `backend-smoke-test`: `docker build` de `backend/` → corre la imagen en `:3000` → `curl /health` (si falla, imprime `docker logs` del contenedor).
+3. `backend-smoke-test`: `docker build -f backend/Dockerfile.vercel` (el mismo artefacto que Vercel despliega) → corre la imagen en `:3000` → `curl /health` (si falla, imprime `docker logs` del contenedor).
 4. **Deploy solo en push a main** (no en PR), vía Vercel CLI (`vercel pull` + `vercel deploy --prod`) con tokens por proyecto — **no** es deploy de Vercel Git: ambos `vercel.json` tienen `"git": { "deploymentEnabled": false }`.
 5. Smoke test post-deploy: `/` en `laburodev.vercel.app`, `/health` en `laburodev-api.santiagogoncalvez.com`.
 

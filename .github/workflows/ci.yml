@@ -49,8 +49,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build image
-        run: docker build -t laburodev-api backend
+      # Dockerfile.vercel es el artefacto real que Vercel despliega (CMD server.js,
+      # ENV NODE_ENV=production). El smoke test valida exactamente eso.
+      - name: Build image (Dockerfile.vercel)
+        run: docker build -f backend/Dockerfile.vercel -t laburodev-api backend
       - name: Smoke test
         run: |
           docker run -d --name api -p 3000:3000 laburodev-api
