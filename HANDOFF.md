@@ -61,19 +61,37 @@ Gotchas:
 - Frontend **no** se dockeriza: Vercel lo sirve desde CDN y el HMR de Vite en contenedor Windows/WSL2 es más lento que el nativo.
 - Sin `docker-compose.yml` por ahora: con un solo servicio alcanza `docker run`.
 
-### ⏸️ Evaluar — punto 2: deploy dockerizado del backend en Vercel
+### ✅ Punto 2 — ejecutado (proyecto Vercel nuevo, rama `feat/docker-vercel`)
 
-Función nueva de Vercel (plan gratuito, según la lección "Desplegar Docker en Vercel" del curso). **No se toca el pipeline actual** (Vercel CLI + Actions, endurecido) sin evidencia; se prueba primero en **rama aparte con proyecto Vercel nuevo y deploy de preview**.
+Deploy dockerizado del backend funcionando y verificado de punta a punta en **`https://laburodev-api-docker.vercel.app`** (proyecto Vercel nuevo `laburodev-api-docker`, Container Runtime de Vercel — Beta en todos los planes incluido Hobby).
 
-Cuando se evalúe:
-- Crear `backend/Dockerfile.vercel` (Vercel lo detecta automáticamente con `vercel deploy`).
-- Proyecto Vercel **nuevo** (o reconfigurar el actual: hoy es serverless con rootDirectory) + reconfigurar todas las env vars (`GOOGLE_GENERATIVE_AI_API_KEY`, `MODEL_AI`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `FRONTEND_URL`).
-- Ajustar el job `deploy-backend` de CI a este nuevo flujo.
-- **Cambio de código obligatorio**: adaptar el guard de `listen()` en `app.js` (entrypoint `server.js` aparte o env `DOCKER=true`).
-- Beneficios esperados: rate limiting real en memoria (en serverless cada instancia no comparte contadores), streaming del resumen IA más natural, prod idéntico al local.
-- Verificar en el experimento: escalado de instancias vs rate-limit en memoria, cómo Vercel pasa `PORT` al contenedor, tiempos de build.
+**Archivos (commits en `feat/docker-vercel`):**
+1. `backend/server.js` — entrypoint nuevo: importa `app` de `app.js` y **siempre** hace `listen()`. `app.js` **no se tocó** (su guard serverless sigue intacto para el deploy serverless tradicional).
+2. `backend/Dockerfile.vercel` — multi-stage idéntico al `Dockerfile` + `ENV NODE_ENV=production` (desactiva el guard de `app.js`, evitando doble `listen()`) + `CMD ["node", "server.js"]`.
+
+**Configuración del proyecto nuevo (vía CLI, `backend/.vercel` linkeado):**
+- Env vars: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `GOOGLE_GENERATIVE_AI_API_KEY` (Secret), `MODEL_AI`, `FRONTEND_URL=https://laburodev.santiagogoncalvez.com` (Config — **el origen real del frontend**, verificado contra el API viejo).
+- `framework=container` forzado con `vercel project update`.
+- `PORT` **no hizo falta setearlo**: Vercel respetó el `EXPOSE 3000` del Dockerfile.
+- Vercel inyecta `NODE_ENV=production` en producción (el guard de `app.js` se salta igual).
+
+**Verificado en el deploy (5/5):** `/health` · `/jobs` con datos reales de Turso (`createdAt 2026-10-26` ≠ el `local.db` local) · streaming IA (`text/plain`, TTFB 1,05s vs total 2,11s) · headers `RateLimit` en el contenedor · CORS con el dominio custom.
+
+Gotchas:
+- **Tu `.env` local tiene `NODE_ENV=development`**: al correr el contenedor con `--env-file .env` hay que agregar `-e NODE_ENV=production` (el flag CLI pisa al env-file) o `app.js` también escucha → crash `EADDRINUSE`.
+- El seed se hace igual: `docker exec <contenedor> npm run db:seed` (sin TURSO en el `.env`, cae a `local.db` efímera).
+- La suite local (32/32) pasó con el refactor de services incluido antes del redeploy.
+- CI (`backend-smoke-test`) ahora construye **`Dockerfile.vercel`** (el artefacto real que Vercel despliega).
+
+### ⏳ Pendiente del punto 2 — corte a producción
+
+El proyecto serverless viejo (`laburodev-api.santiagogoncalvez.com`) sigue sirviendo producción. Falta:
+1. **Corte del dominio**: quitar `laburodev-api.santiagogoncalvez.com` del proyecto viejo → adjuntarlo al nuevo `laburodev-api-docker` (el frontend no cambia: su `VITE_API_URL` ya apunta al dominio custom).
+2. **CI `deploy-backend`**: apuntar al proyecto nuevo (project ID/token) una vez migrado el dominio.
+3. Decidir destino del `backend/Dockerfile` viejo (hoy sin uso en CI/Vercel; candidato a eliminar para tener un solo Dockerfile) y borrar/retirar el proyecto serverless una vez validado el corte.
 
 ## 6. Estado de git al momento de escribir esto
 
-- Modificados sin commitear: `.github/workflows/ci.yml` (smoke test con Docker), `AGENTS.md` (comandos Docker + gotchas).
-- Sin trackear: `HANDOFF.md` (este archivo), `backend/Dockerfile`, `backend/.dockerignore`.
+- Rama **`feat/docker-vercel`** (pusheada a `origin`): punto 2 de Docker (`server.js` + `Dockerfile.vercel`), CI usando `Dockerfile.vercel`, refactor de services (`JobService`) y documentación de esta sesión.
+- `main` sigue con el pipeline serverless de siempre (deploy al proyecto viejo `laburodev-api`).
+- Pendiente: merge de `feat/docker-vercel` → `main` (dispara CI completo) y el corte de dominio descrito en §5.
