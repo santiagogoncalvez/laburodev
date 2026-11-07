@@ -48,7 +48,7 @@ Proyecto dividido en dos paquetes independientes (sin workspaces):
 
 Alcance mínimo cumplido. **No cambió el flujo diario**: seguís desarrollando con `npm run dev` en nativo; Docker es capa de verificación + CI.
 
-1. `backend/Dockerfile` — multi-stage (`deps` → `runner`), `node:24-alpine`, `npm ci --omit=dev`, `chown node:node /app` (para que pueda crear `local.db`), `USER node`, `EXPOSE 3000`, `CMD ["node", "app.js"]`.
+1. `backend/Dockerfile` — multi-stage (`deps` → `runner`), `node:24-alpine`, `npm ci --omit=dev`, `chown node:node /app` (para que pueda crear `local.db`), `USER node`, `EXPOSE 3000`, `CMD ["node", "app.js"]`. *(Este archivo fue **reemplazado por `Dockerfile.vercel`** y eliminado para tener un solo Dockerfile — ver punto 2.)*
 2. `backend/.dockerignore` — `.env*` (la API key nunca entra), `node_modules`, `local.db`, logs.
 3. Smoke test de CI (`backend-smoke-test`): ahora `docker build` → `docker run -d` → `curl /health`; si falla imprime `docker logs`.
 
@@ -67,7 +67,7 @@ Deploy dockerizado del backend funcionando y verificado de punta a punta en **`h
 
 **Archivos (commits en `feat/docker-vercel`):**
 1. `backend/server.js` — entrypoint nuevo: importa `app` de `app.js` y **siempre** hace `listen()`. `app.js` **no se tocó** (su guard serverless sigue intacto para el deploy serverless tradicional).
-2. `backend/Dockerfile.vercel` — multi-stage idéntico al `Dockerfile` + `ENV NODE_ENV=production` (desactiva el guard de `app.js`, evitando doble `listen()`) + `CMD ["node", "server.js"]`.
+2. `backend/Dockerfile.vercel` — multi-stage heredado del `Dockerfile` original (**ya eliminado** — es el único Dockerfile del repo) + `ENV NODE_ENV=production` (desactiva el guard de `app.js`, evitando doble `listen()`) + `CMD ["node", "server.js"]`.
 
 **Configuración del proyecto nuevo (vía CLI, `backend/.vercel` linkeado):**
 - Env vars: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `GOOGLE_GENERATIVE_AI_API_KEY` (Secret), `MODEL_AI`, `FRONTEND_URL=https://laburodev.santiagogoncalvez.com` (Config — **el origen real del frontend**, verificado contra el API viejo).
@@ -88,10 +88,11 @@ Gotchas:
 El proyecto serverless viejo (`laburodev-api.santiagogoncalvez.com`) sigue sirviendo producción. Falta:
 1. **Corte del dominio**: quitar `laburodev-api.santiagogoncalvez.com` del proyecto viejo → adjuntarlo al nuevo `laburodev-api-docker` (el frontend no cambia: su `VITE_API_URL` ya apunta al dominio custom).
 2. **CI `deploy-backend`**: apuntar al proyecto nuevo (project ID/token) una vez migrado el dominio.
-3. Decidir destino del `backend/Dockerfile` viejo (hoy sin uso en CI/Vercel; candidato a eliminar para tener un solo Dockerfile) y borrar/retirar el proyecto serverless una vez validado el corte.
+3. ~~Destino del `backend/Dockerfile` viejo~~ → **eliminado** (quedó solo `Dockerfile.vercel`, el único que usan CI, Vercel y los docs). Falta únicamente **borrar/retirar el proyecto serverless** (`laburodev-api`) una vez validado el corte.
 
 ## 6. Estado de git al momento de escribir esto
 
-- Rama **`feat/docker-vercel`** (pusheada a `origin`): punto 2 de Docker (`server.js` + `Dockerfile.vercel`), CI usando `Dockerfile.vercel`, refactor de services (`JobService`) y documentación de esta sesión.
+- Rama **`feat/docker-vercel`** (pusheada a `origin`): punto 2 de Docker (`server.js` + `Dockerfile.vercel`), CI usando `Dockerfile.vercel`, refactor de services (`JobService`), Dockerfile legacy eliminado y documentación de esta sesión. **PR abierto hacia `main`.**
 - `main` sigue con el pipeline serverless de siempre (deploy al proyecto viejo `laburodev-api`).
-- Pendiente: merge de `feat/docker-vercel` → `main` (dispara CI completo) y el corte de dominio descrito en §5.
+- **El frontend en producción ya consume la API Docker** (`VITE_API_URL` cambiada en el proyecto Vercel `laburodev` + redeploy; local probado y revertido).
+- Pendiente: merge del PR (dispara CI completo en `main`) y el corte de dominio descrito en §5.
