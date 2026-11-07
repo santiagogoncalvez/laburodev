@@ -85,14 +85,17 @@ Gotchas:
 
 ### ⏳ Pendiente del punto 2 — corte a producción
 
-El proyecto serverless viejo (`laburodev-api.santiagogoncalvez.com`) sigue sirviendo producción. Falta:
-1. **Corte del dominio**: quitar `laburodev-api.santiagogoncalvez.com` del proyecto viejo → adjuntarlo al nuevo `laburodev-api-docker` (el frontend no cambia: su `VITE_API_URL` ya apunta al dominio custom).
-2. **CI `deploy-backend`**: apuntar al proyecto nuevo (project ID/token) una vez migrado el dominio.
-3. ~~Destino del `backend/Dockerfile` viejo~~ → **eliminado** (quedó solo `Dockerfile.vercel`, el único que usan CI, Vercel y los docs). Falta únicamente **borrar/retirar el proyecto serverless** (`laburodev-api`) una vez validado el corte.
+Estado de los pasos del corte (2026-11-07):
+
+1. ✅ **Secret del CI**: `VERCEL_PROJECT_ID_BACKEND` en GitHub Actions → `prj_ldbALFDM1jK66HeSGuMN1zQ9pzDb` (`laburodev-api-docker`). Token sin cambios (mismo equipo; el job "Validar token" avisa con mensaje claro si fallara).
+2. ✅ **`rootDirectory=backend`** seteado en `laburodev-api-docker` (paridad con el proyecto viejo; sin él, el deploy del CI desde la raíz del repo no encontraría `backend/Dockerfile.vercel`). **Gotcha**: con este setting, los deploys manuales por CLI deben hacerse desde la **raíz del repo** (con `VERCEL_ORG_ID` + `VERCEL_PROJECT_ID`), nunca desde `backend/` (path doble `backend/backend`).
+3. ✅ **Deploy de prueba desde la raíz del repo** → READY (mimic exacto del job `deploy-backend` del CI).
+4. ⏸️ **Corte del dominio — pospuesto por Santiago**: mover `laburodev-api.santiagogoncalvez.com` del proyecto viejo al nuevo. Mientras tanto: el deploy del CI sube al proyecto **nuevo** (secret ya cambiado) y el smoke post-deploy valida `/health` en el dominio custom → proyecto **viejo** (que sigue arriba). El frontend consume `laburodev-api-docker.vercel.app` (URL del proyecto), no el dominio custom → cero impacto en usuarios.
+5. Tras el corte: retirar/borrar el proyecto serverless `laburodev-api` y (opcional) apuntar `VITE_API_URL` al dominio custom en vez de la URL del proyecto.
 
 ## 6. Estado de git al momento de escribir esto
 
-- Rama **`feat/docker-vercel`** (pusheada a `origin`): punto 2 de Docker (`server.js` + `Dockerfile.vercel`), CI usando `Dockerfile.vercel`, refactor de services (`JobService`), Dockerfile legacy eliminado y documentación de esta sesión. **PR abierto hacia `main`.**
-- `main` sigue con el pipeline serverless de siempre (deploy al proyecto viejo `laburodev-api`).
-- **El frontend en producción ya consume la API Docker** (`VITE_API_URL` cambiada en el proyecto Vercel `laburodev` + redeploy; local probado y revertido).
-- Pendiente: merge del PR (dispara CI completo en `main`) y el corte de dominio descrito en §5.
+- Rama `main` con el **PR #1 mergeado** (`feat/docker-vercel` → `main`): `server.js` + `Dockerfile.vercel`, CI sobre `Dockerfile.vercel`, refactor `JobService`, Dockerfile legacy eliminado, docs.
+- `VITE_API_URL` del proyecto Vercel `laburodev` → `https://laburodev-api-docker.vercel.app`: **la producción ya consume la API Docker** (local fue probado y revertido a `localhost:3000`).
+- Este push dispara el pipeline completo en `main` (tests + smoke + **deploy al proyecto docker** con el secret ya cambiado).
+- Pendiente único: **corte de dominio** (§5.4), pospuesto por Santiago.
