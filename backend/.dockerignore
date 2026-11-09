@@ -4,6 +4,7 @@
 
 # Artefactos locales
 node_modules
+dist
 local.db
 *.log
 npm-debug.log*

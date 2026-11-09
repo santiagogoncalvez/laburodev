@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import { streamText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import * as z from "zod";
@@ -19,16 +19,16 @@ const summaryParamsSchema = z.object({
 });
 
 // Wrapper para async handlers en Express 5
-const asyncHandler = (fn) => (req, res, next) =>
-   Promise.resolve(fn(req, res, next)).catch(next);
+const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown>) =>
+   (req: Request, res: Response, next: NextFunction) =>
+      Promise.resolve(fn(req, res, next)).catch(next);
 
 aiRouter.get("/summary/:id", asyncHandler(async (req, res) => {
    const parseResult = summaryParamsSchema.safeParse(req.params);
    if (!parseResult.success) {
+      // Zod v4: los errores viven solo en .issues (la rama .errors ya no existe)
       let msg = "ID de empleo inválido";
-      if (parseResult.error && parseResult.error.errors && parseResult.error.errors.length > 0) {
-         msg = parseResult.error.errors[0].message;
-      } else if (parseResult.error && parseResult.error.issues && parseResult.error.issues.length > 0) {
+      if (parseResult.error.issues.length > 0) {
          msg = parseResult.error.issues[0].message;
       }
       return res.status(400).json({ error: msg });
@@ -68,7 +68,7 @@ aiRouter.get("/summary/:id", asyncHandler(async (req, res) => {
          model: google(CONFIG.MODEL_AI),
          prompt,
          temperature: 0.3,
-         maxTokens: 300,
+         maxOutputTokens: 300,
       });
 
       const webResponse = result.toTextStreamResponse();
@@ -80,7 +80,7 @@ aiRouter.get("/summary/:id", asyncHandler(async (req, res) => {
       res.flushHeaders();
 
       console.log("[AI] Starting stream pipe...");
-      const reader = webResponse.body.getReader();
+      const reader = webResponse.body!.getReader();
       let chunkCount = 0;
       while (true) {
          const { done, value } = await reader.read();

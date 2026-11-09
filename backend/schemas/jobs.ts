@@ -25,7 +25,7 @@ import * as z from "zod";
   },
 */
 
-const LEVELS = ["junior", "mid-level", "senior", "lead"];
+const LEVELS = ["junior", "mid-level", "senior", "lead"] as const;
 
 const dataSchema = z.object({
    technology: z
@@ -69,10 +69,16 @@ const partialJobSchema = z.object({
    content: contentSchema.partial().optional(),
 });
 
-export function validateJob(job) {
+// Tipos de entrada derivados del esquema (una sola fuente de verdad).
+export type JobInput = z.infer<typeof jobSchema>;
+export type JobUpdateInput = z.infer<typeof partialJobSchema>;
+export type JobDataInput = z.infer<typeof dataSchema>;
+export type JobContentInput = z.infer<typeof contentSchema>;
+
+export function validateJob(job: unknown) {
    return jobSchema.safeParse(job);
 }
 
-export function validatePartialJob(job) {
+export function validatePartialJob(job: unknown) {
    return partialJobSchema.safeParse(job);
 }

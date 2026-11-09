@@ -1,13 +1,14 @@
+import type { Request, Response } from "express";
 import { JobService } from "../services/jobsService.js";
 import { DEFAULTS } from "../config.js";
 import { validateJob, validatePartialJob } from "../schemas/jobs.js";
 
-function validationError(res, result) {
+function validationError(res: Response, result: { error: { issues: { message: string }[] } }) {
    return res.status(400).json({ message: result.error.issues[0].message });
 }
 
 export class JobController {
-   static async getAll(req, res) {
+   static async getAll(req: Request, res: Response) {
       const {
          text,
          level,
@@ -37,10 +38,10 @@ export class JobController {
          limit: responseLimit,
          offset: responseOffset,
       } = await JobService.getAll({
-         search: text,
-         level,
-         technology,
-         modality,
+         search: text as string | undefined,
+         level: level as string | undefined,
+         technology: technology as string | undefined,
+         modality: modality as string | undefined,
          limit: Math.min(limitNumber, DEFAULTS.MAX_LIMIT_PAGINATION),
          offset: offsetNumber,
       });
@@ -53,7 +54,7 @@ export class JobController {
       });
    }
 
-   static async getId(req, res) {
+   static async getId(req: Request<{ id: string }>, res: Response) {
       const { id } = req.params;
 
       const job = await JobService.getById(id);
@@ -65,7 +66,7 @@ export class JobController {
       return res.json(job);
    }
 
-   static async create(req, res) {
+   static async create(req: Request, res: Response) {
       const result = validateJob(req.body);
 
       if (!result.success) {
@@ -77,7 +78,7 @@ export class JobController {
       return res.status(201).json(newJob);
    }
 
-   static async update(req, res) {
+   static async update(req: Request<{ id: string }>, res: Response) {
       const { id } = req.params;
 
       const result = validateJob(req.body);
@@ -95,7 +96,7 @@ export class JobController {
       return res.json(updatedJob);
    }
 
-   static async partialUpdate(req, res) {
+   static async partialUpdate(req: Request<{ id: string }>, res: Response) {
       const { id } = req.params;
 
       const { title, company, location, description, data, content } = req.body;
@@ -126,7 +127,7 @@ export class JobController {
       return res.json(updatedJob);
    }
 
-   static async delete(req, res) {
+   static async delete(req: Request<{ id: string }>, res: Response) {
       const { id } = req.params;
 
       const deleted = await JobService.delete(id);

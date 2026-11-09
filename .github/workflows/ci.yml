@@ -26,8 +26,11 @@ jobs:
       - name: Seed Database
         run: npm run db:seed
         working-directory: backend
+      - name: Typecheck (TypeScript)
+        run: npm run typecheck
+        working-directory: backend
       - name: Test (sin tests de IA)
-        run: node --test --test-skip-pattern="AI"
+        run: npm test -- --test-skip-pattern="AI"
         working-directory: backend
 
   frontend-build:
@@ -49,8 +52,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Dockerfile.vercel es el artefacto real que Vercel despliega (CMD server.js,
-      # ENV NODE_ENV=production). El smoke test valida exactamente eso.
+      # Dockerfile.vercel es el artefacto real que Vercel despliega (build de tsc +
+      # CMD node dist/server.js, ENV NODE_ENV=production). El smoke test valida eso.
       - name: Build image (Dockerfile.vercel)
         run: docker build -f backend/Dockerfile.vercel -t laburodev-api backend
       - name: Smoke test

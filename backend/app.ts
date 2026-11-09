@@ -1,4 +1,5 @@
 import express from "express";
+import type { Request, Response, NextFunction } from "express";
 import { existsSync } from "node:fs";
 
 // Cargar .env ANTES de importar config.js y routes
@@ -34,7 +35,7 @@ app.use((req, res) => {
 });
 
 // eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
    console.error(err);
 
    if (err.type === "entity.parse.failed") {

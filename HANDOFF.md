@@ -12,7 +12,7 @@ Proyecto dividido en dos paquetes independientes (sin workspaces):
 
 ### Últimas funcionalidades integradas
 
-- **Base de datos Turso**: esquema en `backend/db/schema.sql`, seed/migración de columnas en `backend/db/seed.js`.
+- **Base de datos Turso**: esquema en `backend/db/schema.sql`, seed/migración de columnas en `backend/db/seed.ts`.
 - **Resumen de ofertas con IA** (`GET /ai/summary/:id`): streaming con Gemini (`MODEL_AI`, default `gemini-3.5-flash-lite`), en el frontend hook `useAISummary` + componente `AISummary` + `Streamdown`.
 - **Rate limiting doble**: `generalLimiter` (100 req/15 min/IP) global + `aiRateLimiter` (5 req/1 min/IP) en `/ai/*`.
 - **Tests E2E con Stagehand v4** en `frontend/ai-e2e/`.
@@ -20,8 +20,9 @@ Proyecto dividido en dos paquetes independientes (sin workspaces):
 
 ## 2. Decisiones Técnicas y Configuración
 
-- Express 5 con ESM (`"type": "module"` en ambos paquetes); imports relativos con `.js`.
-- **Autostart del server** en `backend/app.js` protegido por `NODE_ENV`: no hace `listen()` cuando `NODE_ENV` es `production` ni `test` (el test levanta su propio server en `:3001`). Por eso correr los tests siempre con `NODE_ENV=test`, si no el proceso queda colgado.
+- Express 5 con ESM (`"type": "module"` en ambos paquetes); imports relativos con `.js`. **En backend (TS)**: convención NodeNext — los `.ts` importan con specificador `.js` (`./x.js` resuelve a `x.ts` en `tsc`/`tsx`); no cambiarlo a `.ts`.
+- **Backend en TypeScript** (migración 2026-11-09): todo el código fuente es `.ts` (los tests siguen `.js`). `npm run typecheck` (`tsc --noEmit`) tiene que quedar limpio; `npm test` corre con `node --import tsx --test`.
+- **Autostart del server** en `backend/app.ts` protegido por `NODE_ENV`: no hace `listen()` cuando `NODE_ENV` es `production` ni `test` (el test levanta su propio server en `:3001`). Por eso correr los tests siempre con `NODE_ENV=test`, si no el proceso queda colgado.
 - Zod valida en **controllers**, no en rutas.
 - Frontend: la **URL manda** el estado de búsqueda (`useSearchParams`); nunca escribir params desde efectos.
 - Deploy independiente en Vercel por paquete (rootDirectory configurado en cada project de Vercel).
@@ -99,3 +100,15 @@ Estado de los pasos del corte (2026-11-07):
 - `VITE_API_URL` del proyecto Vercel `laburodev` → `https://laburodev-api-docker.vercel.app`: **la producción ya consume la API Docker** (local fue probado y revertido a `localhost:3000`).
 - Este push dispara el pipeline completo en `main` (tests + smoke + **deploy al proyecto docker** con el secret ya cambiado).
 - Pendiente único: **corte de dominio** (§5.4), pospuesto por Santiago.
+
+## 7. Migración a TypeScript (2026-11-09)
+
+Backend migrado completo a TypeScript según `backend/PLAN-TYPESCRIPT.md` (checklist actualizado con el estado real):
+
+- **Fuentes**: los 13 archivos de `backend/` son `.ts` (renombrados con `git mv`); `types/index.ts` define `Job`, `JobData`, `JobContent`, `PaginatedJobsResponse`, `GetAllParams`; los tipos de entrada salen de `z.infer` en `schemas/jobs.ts`.
+- **Scripts**: `dev` → `tsx watch app.ts`, `test` → `node --import tsx --test` (los tests siguen siendo `app.test.js`), `db:seed`/`db:reset` → `tsx db/seed.ts`, `build` → `tsc` (`dist/`), `typecheck` → `tsc --noEmit`.
+- **CI**: `backend-test` ahora corre `npm run typecheck` y `npm test -- --test-skip-pattern="AI"` (el `node --test` viejo no sabía cargar `.ts`).
+- **Docker**: `Dockerfile.vercel` multi-stage nuevo — stage `build` (`npm ci` + `npm run build`) y stage `runner` con fuente completa + `dist/` fresco (`CMD ["node", "dist/server.js"]`). Verificado local: build ✓, `/health` ✓, seed adentro del contenedor ✓, `/jobs` con filtro ✓. Imagen ~435 MB (antes ~75 MB: ahora incluye devDeps para que `docker exec … npm run db:seed` siga funcionando con tsx).
+- **Cambios de comportamiento** (2, ambos intencionales): `maxTokens: 300` → `maxOutputTokens: 300` en `routes/ai.ts` (AI SDK v5 lo renombró; el límite antes se ignoraba en silencio y ahora sí aplica) y la rama muerta `parseResult.error.errors` eliminada (Zod v4 la quitó; caía siempre al fallback `.issues`, comportamiento idéntico).
+- **Verificación final**: `typecheck` 0 errores · tests 32/32 · `build` OK · seed OK · imagen Docker OK.
+- Docs actualizados: `AGENTS.md` (comandos/gotchas/CI) y este archivo.

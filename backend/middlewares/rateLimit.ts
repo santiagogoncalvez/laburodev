@@ -8,7 +8,7 @@ const generalLimiter = rateLimit({
    standardHeaders: "draft-8",
 });
 
-const createSpecificLimiter = ({ windowMs, limit, message }) =>
+const createSpecificLimiter = ({ windowMs, limit, message }: { windowMs: number; limit: number; message: string }) =>
    rateLimit({
       windowMs,
       limit,
