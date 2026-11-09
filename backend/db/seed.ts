@@ -1,3 +1,4 @@
+import "../env.js"; // PRIMERO: .env antes de que db/index lea process.env
 import fs from "node:fs";
 import path from "node:path";
 import { db } from "./index.js";

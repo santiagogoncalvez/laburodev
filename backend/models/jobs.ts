@@ -3,42 +3,40 @@ import type { Row } from "@libsql/client";
 import type { Job, GetAllParams, PaginatedJobsResponse } from "../types/index.js";
 import type { JobInput, JobUpdateInput, JobDataInput, JobContentInput } from "../schemas/jobs.js";
 
-// Fila cruda de la tabla `jobs` tal como la devuelve libSQL.
-// El casteo ocurre una sola vez, en el límite con la base de datos (mapRow).
-interface JobRow {
-   id: string;
-   title: string;
-   company: string;
-   location: string;
-   level: string;
-   modality: string;
-   technology: string;
-   description: string;
-   responsibilities: string;
-   requirements: string;
-   about: string;
-   created_at: string | null;
+// Helpers de normalización en el límite con la DB: todo verificado, sin `as`.
+function asString(v: unknown): string {
+   return typeof v === "string" ? v : "";
+}
+
+function parseJsonArray(v: unknown): string[] {
+   if (typeof v !== "string" || v === "") return [];
+   try {
+      const parsed: unknown = JSON.parse(v);
+      return Array.isArray(parsed)
+         ? parsed.filter((x): x is string => typeof x === "string")
+         : [];
+   } catch {
+      return [];
+   }
 }
 
 function mapRow(row: Row): Job {
-   const r = row as unknown as JobRow;
-
    return {
-      id: r.id,
-      title: r.title,
-      company: r.company,
-      location: r.location,
-      createdAt: r.created_at,
+      id: asString(row.id),
+      title: asString(row.title),
+      company: asString(row.company),
+      location: asString(row.location),
+      createdAt: typeof row.created_at === "string" ? row.created_at : null,
       data: {
-         level: r.level,
-         modality: r.modality,
-         technology: JSON.parse(r.technology || "[]"),
+         level: asString(row.level),
+         modality: asString(row.modality),
+         technology: parseJsonArray(row.technology),
       },
       content: {
-         description: r.description,
-         responsibilities: JSON.parse(r.responsibilities || "[]"),
-         requirements: JSON.parse(r.requirements || "[]"),
-         about: r.about,
+         description: asString(row.description),
+         responsibilities: parseJsonArray(row.responsibilities),
+         requirements: parseJsonArray(row.requirements),
+         about: asString(row.about),
       },
    };
 }
@@ -69,7 +67,10 @@ export class JobModel {
       }
 
       const countSql = sql.replace("SELECT *", "SELECT COUNT(*) as count");
-      const countResult = await db.execute({ sql: countSql, args: params.slice(0, -2) });
+      // El COUNT se calcula ANTES de agregar LIMIT/OFFSET: params contiene solo
+      // los filtros y hay que pasarlos TODOS (el slice(0, -2) anterior borraba
+      // los filtros y devolvía total=0 con cualquier consulta filtrada).
+      const countResult = await db.execute({ sql: countSql, args: params });
       const total = Number(countResult.rows[0].count);
 
       sql += " LIMIT ? OFFSET ?";

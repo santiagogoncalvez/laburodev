@@ -73,6 +73,12 @@ aiRouter.get("/summary/:id", asyncHandler(async (req, res) => {
 
       const webResponse = result.toTextStreamResponse();
 
+      // Guard tipado antes de tocar headers: sin aserción `!` sobre body.
+      const body = webResponse.body;
+      if (!body) {
+         return res.status(502).json({ error: "Respuesta vacía del modelo" });
+      }
+
       webResponse.headers.forEach((value, key) => {
          res.setHeader(key, value);
       });
@@ -80,7 +86,7 @@ aiRouter.get("/summary/:id", asyncHandler(async (req, res) => {
       res.flushHeaders();
 
       console.log("[AI] Starting stream pipe...");
-      const reader = webResponse.body!.getReader();
+      const reader = body.getReader();
       let chunkCount = 0;
       while (true) {
          const { done, value } = await reader.read();
@@ -92,11 +98,12 @@ aiRouter.get("/summary/:id", asyncHandler(async (req, res) => {
       console.log("[AI] Stream ended, chunks:", chunkCount);
       res.end();
    } catch (error) {
+      // El detalle queda solo en el log del servidor: la respuesta nunca
+      // expone mensajes internos del SDK/modelo (info disclosure).
       console.error("Error generando resumen:", error);
-      const message = error instanceof Error ? error.message : String(error);
       if (!res.headersSent) {
          res.setHeader("Content-Type", "application/json");
-         return res.status(500).json({ error: "Error generando el resumen", detail: message });
+         return res.status(500).json({ error: "Error generando el resumen" });
       }
       res.end();
    }

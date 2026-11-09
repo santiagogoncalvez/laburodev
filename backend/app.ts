@@ -1,11 +1,7 @@
+import "./env.js"; // PRIMERO: .env cargado antes de que config/cors/db lean process.env
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
-import { existsSync } from "node:fs";
-
-// Cargar .env ANTES de importar config.js y routes
-if (existsSync(".env")) {
-   process.loadEnvFile();
-}
+import helmet from "helmet";
 
 import { DEFAULTS } from "./config.js";
 import { corsMiddleware } from "./middlewares/cors.js";
@@ -19,6 +15,8 @@ const app = express();
 
 app.set("trust proxy", 1);
 
+// Security headers (nosniff, CSP por defecto, etc.) en todas las respuestas.
+app.use(helmet());
 app.use(corsMiddleware());
 app.use(express.json());
 app.use(generalLimiter);
@@ -34,11 +32,17 @@ app.use((req, res) => {
    res.status(404).json({ message: "Not found" });
 });
 
+// El body-parser marca JSON inválido con err.type = "entity.parse.failed".
+// Guard verificado (instanceof + in + igualdad) en vez de tipar err como any.
+function isInvalidJson(err: unknown): err is Error & { type: string } {
+   return err instanceof Error && "type" in err && err.type === "entity.parse.failed";
+}
+
 // eslint-disable-next-line no-unused-vars
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
    console.error(err);
 
-   if (err.type === "entity.parse.failed") {
+   if (isInvalidJson(err)) {
       return res.status(400).json({ message: "Invalid JSON body" });
    }
 

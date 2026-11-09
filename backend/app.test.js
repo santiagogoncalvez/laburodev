@@ -9,6 +9,13 @@ const BASE_URL = `http://localhost:${PORT}`;
 let createdId;
 let validationId;
 
+// Guard de escritura (x-api-key): los tests habilitan las escrituras con una
+// key de prueba. El guard la lee POR REQUEST desde el env, así que setearla
+// acá (antes de before()) alcanza para todo el archivo.
+const WRITE_KEY = "test-write-key";
+process.env.WRITE_API_KEY = WRITE_KEY;
+const writeHeaders = { "x-api-key": WRITE_KEY };
+
 // antes de cada test se inicia el servidor
 before(async () => {
    return new Promise((resolve, reject) => {
@@ -103,6 +110,19 @@ describe("GET /jobs filtros y paginación", () => {
       );
    });
 
+   test("debe devolver total correcto con filtro", async () => {
+      // Regresión del bug: el COUNT se llevaba puesto el slice(0, -2) y
+      // devolvía total=0 con cualquier filtro.
+      const json = await (
+         await fetch(`${BASE_URL}/jobs?technology=react&limit=50`)
+      ).json();
+      assert.ok(json.total > 0, "El total con filtro debe ser mayor a 0");
+      assert.ok(
+         json.total >= json.data.length,
+         "El total debe ser mayor o igual a los resultados traídos",
+      );
+   });
+
    test("debe paginar con limit y offset sin repetir", async () => {
       const page1 = await (
          await fetch(`${BASE_URL}/jobs?limit=2&offset=0`)
@@ -150,7 +170,7 @@ describe("POST /jobs", () => {
       };
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify(body),
       });
       assert.strictEqual(response.status, 201);
@@ -165,7 +185,7 @@ describe("POST /jobs", () => {
    test("debe responder 400 sin campos obligatorios", async () => {
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({}),
       });
       assert.strictEqual(response.status, 400);
@@ -183,7 +203,7 @@ describe("PUT /jobs/:id", () => {
       };
       const res = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify(body),
       });
       const job = await res.json();
@@ -200,7 +220,7 @@ describe("PUT /jobs/:id", () => {
       };
       const response = await fetch(`${BASE_URL}/jobs/${putId}`, {
          method: "PUT",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify(body),
       });
       assert.strictEqual(response.status, 200);
@@ -214,7 +234,7 @@ describe("PUT /jobs/:id", () => {
    test("debe responder 400 si faltan campos", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${createdId}`, {
          method: "PUT",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({ title: "Incompleto" }),
       });
       assert.strictEqual(response.status, 400);
@@ -223,7 +243,7 @@ describe("PUT /jobs/:id", () => {
    test("debe responder 404 con un id inexistente", async () => {
       const response = await fetch(`${BASE_URL}/jobs/no-existe`, {
          method: "PUT",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({
             title: "Xyz Developer",
             company: "X Corp",
@@ -247,7 +267,7 @@ describe("PATCH /jobs/:id", () => {
       };
       const res = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify(body),
       });
       const job = await res.json();
@@ -257,7 +277,7 @@ describe("PATCH /jobs/:id", () => {
    test("debe actualizar solo lo enviado", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${patchId}`, {
          method: "PATCH",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({ title: "QA Solo Título Actualizado" }),
       });
       assert.strictEqual(response.status, 200);
@@ -270,7 +290,7 @@ describe("PATCH /jobs/:id", () => {
    test("debe responder 400 sin nada para actualizar", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${createdId}`, {
          method: "PATCH",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({}),
       });
       assert.strictEqual(response.status, 400);
@@ -279,7 +299,7 @@ describe("PATCH /jobs/:id", () => {
    test("debe responder 404 con un id inexistente", async () => {
       const response = await fetch(`${BASE_URL}/jobs/no-existe`, {
          method: "PATCH",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({ title: "Xyz" }),
       });
       assert.strictEqual(response.status, 404);
@@ -290,7 +310,7 @@ describe("validaciones zod", () => {
    test("POST debe responder 400 si el título es muy corto", async () => {
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({
             title: "QA",
             company: "ACME",
@@ -311,7 +331,7 @@ describe("validaciones zod", () => {
    test("POST debe responder 400 sin tecnologías", async () => {
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({
             title: "QA Manual",
             company: "ACME",
@@ -326,7 +346,7 @@ describe("validaciones zod", () => {
    test("POST debe responder 400 con un nivel inválido", async () => {
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({
             title: "QA Manual",
             company: "ACME",
@@ -341,7 +361,7 @@ describe("validaciones zod", () => {
    test("POST debe ignorar campos desconocidos", async () => {
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({
             title: "QA Manual Tester",
             company: "ACME",
@@ -361,7 +381,7 @@ describe("validaciones zod", () => {
    test("PUT debe aceptar sin location porque es opcional", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${validationId}`, {
          method: "PUT",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({
             title: "QA Manual Updated",
             company: "ACME",
@@ -375,7 +395,7 @@ describe("validaciones zod", () => {
    test("PATCH debe aceptar data parcial anidada", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${validationId}`, {
          method: "PATCH",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({ data: { level: "senior" } }),
       });
       assert.strictEqual(response.status, 200);
@@ -388,7 +408,7 @@ describe("validaciones zod", () => {
    test("PATCH debe responder 400 con un título inválido", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${validationId}`, {
          method: "PATCH",
-         headers: { "Content-Type": "application/json" },
+         headers: { "Content-Type": "application/json", ...writeHeaders },
          body: JSON.stringify({ title: "x" }),
       });
       assert.strictEqual(response.status, 400);
@@ -397,6 +417,7 @@ describe("validaciones zod", () => {
    test("DELETE debe limpiar el trabajo de validación", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${validationId}`, {
          method: "DELETE",
+         headers: { ...writeHeaders },
       });
       assert.strictEqual(response.status, 204);
    });
@@ -406,6 +427,7 @@ describe("DELETE /jobs/:id", () => {
    test("debe borrar con 204 y el trabajo deja de existir", async () => {
       const deleted = await fetch(`${BASE_URL}/jobs/${createdId}`, {
          method: "DELETE",
+         headers: { ...writeHeaders },
       });
       assert.strictEqual(deleted.status, 204);
 
@@ -416,6 +438,7 @@ describe("DELETE /jobs/:id", () => {
    test("debe responder 404 con un id inexistente", async () => {
       const response = await fetch(`${BASE_URL}/jobs/no-existe`, {
          method: "DELETE",
+         headers: { ...writeHeaders },
       });
       assert.strictEqual(response.status, 404);
    });
@@ -467,5 +490,47 @@ describe("GET /ai/summary/:id - [AI]", () => {
          response.headers.get("ratelimit-policy"),
          "Header RateLimit-Policy presente",
       );
+   });
+});
+
+describe("writeGuard (x-api-key)", () => {
+   test("debe responder 401 en escritura sin la key", async () => {
+      const response = await fetch(`${BASE_URL}/jobs`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({}),
+      });
+      assert.strictEqual(response.status, 401);
+   });
+
+   test("debe responder 401 con una key incorrecta", async () => {
+      const response = await fetch(`${BASE_URL}/jobs`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json", "x-api-key": "otra-key" },
+         body: JSON.stringify({}),
+      });
+      assert.strictEqual(response.status, 401);
+   });
+
+   test("debe responder 503 si WRITE_API_KEY no está configurada (fail-closed)", async () => {
+      const saved = process.env.WRITE_API_KEY;
+      delete process.env.WRITE_API_KEY;
+      try {
+         const response = await fetch(`${BASE_URL}/jobs`, { method: "POST" });
+         assert.strictEqual(response.status, 503);
+      } finally {
+         process.env.WRITE_API_KEY = saved;
+      }
+   });
+
+   test("debe dejar GET abierto sin la key", async () => {
+      const saved = process.env.WRITE_API_KEY;
+      delete process.env.WRITE_API_KEY;
+      try {
+         const response = await fetch(`${BASE_URL}/jobs`);
+         assert.strictEqual(response.status, 200);
+      } finally {
+         process.env.WRITE_API_KEY = saved;
+      }
    });
 });

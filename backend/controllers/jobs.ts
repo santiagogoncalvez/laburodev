@@ -7,6 +7,12 @@ function validationError(res: Response, result: { error: { issues: { message: st
    return res.status(400).json({ message: result.error.issues[0].message });
 }
 
+// Query params de Express llegan como string | string[] | ParsedQs: en el
+// borde solo aceptamos string real. Se verifica con typeof (narrowing), no
+// con `as` — un ?text=a&text=b hoy se ignora en vez de reventar en libSQL.
+const single = (v: unknown): string | undefined =>
+   typeof v === "string" ? v : undefined;
+
 export class JobController {
    static async getAll(req: Request, res: Response) {
       const {
@@ -38,10 +44,10 @@ export class JobController {
          limit: responseLimit,
          offset: responseOffset,
       } = await JobService.getAll({
-         search: text as string | undefined,
-         level: level as string | undefined,
-         technology: technology as string | undefined,
-         modality: modality as string | undefined,
+         search: single(text),
+         level: single(level),
+         technology: single(technology),
+         modality: single(modality),
          limit: Math.min(limitNumber, DEFAULTS.MAX_LIMIT_PAGINATION),
          offset: offsetNumber,
       });

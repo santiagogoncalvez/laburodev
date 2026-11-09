@@ -76,6 +76,13 @@ Frontend:
 - **IA específico**: `aiRateLimiter` (5 req/1 min/IP) solo en `/ai/*`.
 - Headers estándar `RateLimit`, `RateLimit-Policy` (draft-8).
 - `app.set("trust proxy", 1)` para IPs reales detrás de proxy (Vercel).
+- **Store en memoria** (limitación conocida): los contadores son por instancia. Si el contenedor escala a N réplicas, el límite efectivo es N×100. Cuando haya más de una instancia, mover a un store compartido (p. ej. Upstash/Redis + `rate-limit-redis`).
+
+## Escritura protegida (`x-api-key`)
+
+- `POST/PUT/PATCH/DELETE /jobs` exigen header `x-api-key` igual a la env `WRITE_API_KEY` (`middlewares/writeGuard.ts`, comparación timing-safe).
+- **Fail-closed**: sin `WRITE_API_KEY` configurada, las escrituras responden 503. En Vercel hay que agregarla en env vars del proyecto; en local vive en `backend/.env` (ver `.env.example`).
+- Guard **temporal** hasta que exista auth real (roadmap #2). GET (`/jobs`, `/jobs/:id`, `/health`, `/ai/*`) sigue abierto.
 
 ## Tests con agente (`frontend/ai-e2e/`)
 
