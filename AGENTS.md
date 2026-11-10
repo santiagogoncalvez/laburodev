@@ -2,6 +2,9 @@
 
 Bolsa de trabajos para desarrolladores. Frontend (React + Vite) y API (Express 5) desplegadas en Vercel.
 
+## Regla de Oro para Agentes
+Toda la documentación, planes de trabajo, notas de arquitectura y entregables deben crearse **estrictamente dentro de la carpeta raíz del proyecto (`C:\Users\music\Documents\Programacion\fullstack-projects\laburodev`)**. NO usar directorios externos para archivos relacionados con el desarrollo o la planificación.
+
 ## Estructura
 
 - **Paquetes independientes**: `frontend/` y `backend/` son hermanos, sin npm workspaces. Cada uno tiene su `package.json`, su lockfile y su `node_modules`.

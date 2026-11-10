@@ -17,6 +17,7 @@ Proyecto dividido en dos paquetes independientes (sin workspaces):
 - **Rate limiting doble**: `generalLimiter` (100 req/15 min/IP) global + `aiRateLimiter` (5 req/1 min/IP) en `/ai/*`.
 - **Tests E2E con Stagehand v4** en `frontend/ai-e2e/`.
 - **CI/CD en GitHub Actions** (`.github/workflows/ci.yml`): test + build en PR, deploy a Vercel solo en push a `main` (vía Vercel CLI, no Vercel Git).
+- **Hardening backend (2026-11-09)**: guard de escritura `x-api-key` (`WRITE_API_KEY`, fail-closed), helmet, `.env` cargado por orden ESM (`env.ts`), bug `total=0` con filtros corregido, `npm audit` 8 → 6 (ver §7).
 
 ## 2. Decisiones Técnicas y Configuración
 
@@ -39,9 +40,13 @@ Proyecto dividido en dos paquetes independientes (sin workspaces):
 ## 4. Próximos Pasos (Pendientes)
 
 1. ~~Migración de `jobs.json` a base de datos~~ → **hecho** (Turso/libSQL). Pendiente real: evaluar si se necesita PostgreSQL/Turso remoto en producción (hoy puede correr con `local.db`) y definir estrategia de migraciones de esquema.
-2. Autenticación / roles para reclutadores (crear/editar ofertas). Hoy login/register/profile son **mock local con Zustand**, sin backend de auth.
-3. Ampliar cobertura de tests unitarios en el Backend (hoy: `app.test.js` — CRUD, filtros, paginación, validaciones, IA).
+2. **PRIORIDAD SIGUIENTE: Autenticación / roles para reclutadores** (crear/editar ofertas). Hoy login/register/profile son **mock local con Zustand**, sin backend de auth. Mientras tanto los escritos ya están protegidos con el guard temporal `x-api-key` (§7): al implementar auth real, reemplazar el guard y setear/retirar `WRITE_API_KEY` en Vercel (decisión de Santiago: sin ella las escrituras responden 503 — el frontend no escribe, cero impacto).
+3. Ampliar cobertura de tests unitarios en el Backend (hoy: `app.test.js` — CRUD, filtros, paginación, validaciones, IA, guard).
 4. ~~Roadmap completo en `../Roadmap.txt`~~ → **el archivo no existe** en esa ruta; recuperar el roadmap original si se necesita (6 etapas: SQL → Node/TS → KIO → libros → arquitectura/calidad → ORM).
+5. ~~Migración a TypeScript del backend~~ → **hecho** (2026-11-09, ver §7).
+6. ~~Revisión experta + hardening del backend~~ → **hecho** (2026-11-09, `c09c132`, ver §7).
+7. ~~Corte de dominio + borrado del proyecto Vercel viejo `laburodev-api`~~ → **hecho**: el dominio `laburodev-api.santiagogoncalvez.com` ya sirve desde el proyecto nuevo `laburodev-api-docker` (verificado con helmet + guard en prod) y el proyecto viejo fue borrado por Santiago (2026-11-09).
+8. **Migración del frontend a TypeScript** — plan listo en `frontend/PLAN-TYPESCRIPT.md` (2026-11-09): conversión progresiva por capas, tipos compartidos backend↔frontend (decisión pendiente: los paquetes son independientes sin workspaces) y fase de CI (exigir `typecheck` también en `frontend/`, tocaría `ci.yml`).
 
 ## 5. Docker (módulo 13 jscamp) — decisiones
 
@@ -91,15 +96,15 @@ Estado de los pasos del corte (2026-11-07):
 1. ✅ **Secret del CI**: `VERCEL_PROJECT_ID_BACKEND` en GitHub Actions → `prj_ldbALFDM1jK66HeSGuMN1zQ9pzDb` (`laburodev-api-docker`). Token sin cambios (mismo equipo; el job "Validar token" avisa con mensaje claro si fallara).
 2. ✅ **`rootDirectory=backend`** seteado en `laburodev-api-docker` (paridad con el proyecto viejo; sin él, el deploy del CI desde la raíz del repo no encontraría `backend/Dockerfile.vercel`). **Gotcha**: con este setting, los deploys manuales por CLI deben hacerse desde la **raíz del repo** (con `VERCEL_ORG_ID` + `VERCEL_PROJECT_ID`), nunca desde `backend/` (path doble `backend/backend`).
 3. ✅ **Deploy de prueba desde la raíz del repo** → READY (mimic exacto del job `deploy-backend` del CI).
-4. ⏸️ **Corte del dominio — pospuesto por Santiago**: mover `laburodev-api.santiagogoncalvez.com` del proyecto viejo al nuevo. Mientras tanto: el deploy del CI sube al proyecto **nuevo** (secret ya cambiado) y el smoke post-deploy valida `/health` en el dominio custom → proyecto **viejo** (que sigue arriba). El frontend consume `laburodev-api-docker.vercel.app` (URL del proyecto), no el dominio custom → cero impacto en usuarios.
-5. Tras el corte: retirar/borrar el proyecto serverless `laburodev-api` y (opcional) apuntar `VITE_API_URL` al dominio custom en vez de la URL del proyecto.
+4. ✅ **Corte del dominio — hecho**: `laburodev-api.santiagogoncalvez.com` sirve desde el proyecto nuevo `laburodev-api-docker` (verificado el 2026-11-09 con los headers de helmet y el guard activos en el dominio custom).
+5. ✅ **Proyecto serverless viejo `laburodev-api` borrado por Santiago (2026-11-09)**. (Opcional pendiente: apuntar `VITE_API_URL` al dominio custom en vez de la URL del proyecto.)
 
 ## 6. Estado de git al momento de escribir esto
 
 - Rama `main` con el **PR #1 mergeado** (`feat/docker-vercel` → `main`): `server.js` + `Dockerfile.vercel`, CI sobre `Dockerfile.vercel`, refactor `JobService`, Dockerfile legacy eliminado, docs.
 - `VITE_API_URL` del proyecto Vercel `laburodev` → `https://laburodev-api-docker.vercel.app`: **la producción ya consume la API Docker** (local fue probado y revertido a `localhost:3000`).
 - Este push dispara el pipeline completo en `main` (tests + smoke + **deploy al proyecto docker** con el secret ya cambiado).
-- Pendiente único: **corte de dominio** (§5.4), pospuesto por Santiago.
+- ~~Pendiente único: **corte de dominio** (§5.4)~~ → hecho y proyecto viejo borrado (2026-11-09, §5.4–5.5).
 
 ## 7. Migración a TypeScript (2026-11-09)
 
@@ -112,3 +117,16 @@ Backend migrado completo a TypeScript según `backend/PLAN-TYPESCRIPT.md` (check
 - **Cambios de comportamiento** (2, ambos intencionales): `maxTokens: 300` → `maxOutputTokens: 300` en `routes/ai.ts` (AI SDK v5 lo renombró; el límite antes se ignoraba en silencio y ahora sí aplica) y la rama muerta `parseResult.error.errors` eliminada (Zod v4 la quitó; caía siempre al fallback `.issues`, comportamiento idéntico).
 - **Verificación final**: `typecheck` 0 errores · tests 32/32 · `build` OK · seed OK · imagen Docker OK.
 - Docs actualizados: `AGENTS.md` (comandos/gotchas/CI) y este archivo.
+
+### Revisión experta + hardening (2026-11-09, `c09c132`)
+
+Revisión multi-skill sobre `app.ts` y las capas; 6 parches aprobados por Santiago, aplicados y verificados uno por uno:
+
+1. **`total=0` con filtros** (bug preexistente, no de la migración): el COUNT usaba `params.slice(0, -2)` y borraba los filtros → ahora recibe todos + test de regresión. Producción: `?technology=react` devuelve `total=11` (antes 0).
+2. **Info disclosure**: el `detail` con mensaje interno del SDK salía en el 500 de `/ai/summary` → ahora solo en el log del server.
+3. **`.env` por orden ESM**: nuevo `backend/env.ts` como primer import de `app.ts` y `db/seed.ts` (antes `loadEnvFile()` corría después de que `config.ts`/`cors.ts` leían `process.env` en el top de sus módulos — en local se perdían `MODEL_AI` y `FRONTEND_URL` en silencio).
+4. **Cero `as`/`any`/`!` en producción**: error handler con `unknown` + guard `isInvalidJson`, `single()` con `typeof` en controllers (un `?text=a&text=b` ahora se ignora en vez de reventar), `mapRow` con `asString`/`parseJsonArray` sin cast, guard de `body` antes de flush en el stream de IA.
+5. **`npm audit fix`** (sin `--force`): 8 → 6 vulnerabilidades (body-parser high + qs moderate resueltos; queda la cadena `@fastify/busboy` — no alcanzable sin multipart, requiere major de ai-sdk).
+6. **Helmet + guard de escritura**: `helmet()` en `app.ts`; `middlewares/writeGuard.ts` exige header `x-api-key` = env `WRITE_API_KEY` en `POST/PUT/PATCH/DELETE /jobs` (comparación timing-safe, **fail-closed**: sin la env var responden 503). 4 tests nuevos del guard; docs en `AGENTS.md` (nueva sección "Escritura protegida" + nota del store en memoria del rate limit) y `.env.example`.
+
+Estado: `typecheck` 0 · **37/37 tests** · `build` OK · smoke de `dist/app.js` OK · CI #24 verde (5 jobs) · prod verificada (helmet + `total=11` + guard 503). `WRITE_API_KEY` **pendiente en Vercel** hasta que exista auth real (decisión de Santiago). Proyecto Vercel viejo `laburodev-api` **borrado** por Santiago (2026-11-09). La key local vive en `backend/.env` (gitignoreado; ver `.env.example`).
