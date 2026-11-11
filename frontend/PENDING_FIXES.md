@@ -11,9 +11,9 @@ fase de estabilización posterior.
   componente se desmonta o cambia el `jobId` mientras el stream está abierto,
   el loop `reader.read()` sigue vivo y sigue llamando `setSummary` → posible
   contenido mezclado de resúmenes (viejo + nuevo) y trabajo post-unmount.
-- **Fix futuro**: `AbortController` guardado en un `ref`, `controller.abort()`
-  en el cleanup de un `useEffect`, y limpiar/reiniciar `summary` al cambiar
-  `jobId`.
+- **✅ Resuelto** (2026-11-11, estabilización): `controllerRef` + abort en el
+  cleanup del `useEffect [jobId]`, reinicio de `summary`/`error`/`loading` al
+  cambiar de `jobId`, y guard `aborted` en el loop del reader.
 
 ## [useAISummary] Updater impuro en `setSummary` (variable `firstChunk`)
 
@@ -24,8 +24,8 @@ fase de estabilización posterior.
   resumen anterior → primer chunk duplicado. Hoy **no manifiesta** porque
   `main.tsx` no envuelve la app en `<StrictMode>`, pero es una bomba de
   tiempo si se activa.
-- **Fix futuro**: decidir "reemplazo vs append" fuera del updater (un `ref`
-  booleano) y pasarle el valor ya calculado.
+- **✅ Resuelto** (2026-11-11, estabilización): el flag vive en `firstChunkRef`
+  y el updater recibe `isFirstChunk` ya calculado → updater puro.
 
 ## [App/SEO] SPA sin status HTTP 404 real ni meta og:
 
@@ -46,8 +46,8 @@ fase de estabilización posterior.
 - Dos invocaciones rápidas (doble click en "Generar") lanzan **dos streams
   concurrentes** escribiendo al mismo estado `summary` → chunks entrelazados
   de dos resúmenes distintos.
-- **Fix futuro**: ignorar la llamada si `loading` ya es `true`, o abortar el
-  stream anterior antes de empezar uno nuevo.
+- **✅ Resuelto** (2026-11-11, estabilización): al invocar se aborta el stream
+  anterior (`controllerRef`) y se arranca uno nuevo — sin streams concurrentes.
 
 ## Auditoría de la skill `frontend-async-best-practices`
 
@@ -71,8 +71,9 @@ fase de estabilización posterior.
      error.
   3. Deps `[jobId]` omiten `navigate` (estable en react-router, pero incompleto
      para el linter).
-- **Fix futuro**: async/await con flag `cancelled` + `AbortController`, y en
-  `!ok` hacer `throw` (o `return`) en vez de continuar.
+- **✅ Resuelto** (2026-11-11, estabilización): async/await + `AbortController`
+  con flag de cancelación (catch/finally ignoran aborts), `return` en `!ok`
+  (sin `response.json()` sobre el body de error) y deps `[jobId, navigate]`.
 
 ## [Detail / datos] Responsabilidades y Requisitos siempre vacíos (bug de datos)
 
@@ -86,9 +87,10 @@ fase de estabilización posterior.
 - **Fix aplicado (Grupo C, aprobado por Santiago)**: mínimo —
   `content={job.content.responsibilities.join("\n")}` en `Detail.tsx`
   (crash → secciones vacías). Documentado en el código con comentario.
-- **Fix futuro (backend/seed)**: que el seed divida el markdown en array
-  (o `parseJsonArray` acepte string → `[string]`) para restaurar el contenido
-  real de las secciones.
+- **✅ Resuelto** (2026-11-11, estabilización): `parseJsonArray` ahora acepta
+  JSON-string → `[string]` (las filas viejas se sirven **sin re-seed**) y el
+  seed envuelve con `toArray()` al sembrar. Frontend conserva `join("\n")` ✓.
+  Opcional: re-seed para dejar las filas con formato array en la DB.
 
 ## [Register] Labels con `htmlFor` que no coincide con el `id`
 
@@ -97,4 +99,30 @@ fase de estabilización posterior.
   hardcodeados, pero los inputs usan `id={nameId}` / `id={passwordId}`
   (useId) → labels huérfanas, clic no enfoca el input (accesibilidad).
   En `Login.tsx` sí están bien (`htmlFor={emailId}` / `{passwordId}`).
-- **Fix futuro**: usar `htmlFor={nameId}` y `htmlFor={passwordId}`.
+- **✅ Resuelto** (2026-11-11, estabilización): usar `htmlFor={nameId}` y
+  `htmlFor={passwordId}`.
+
+## [Detail/XSS] snarkdown pasaba HTML crudo a `dangerouslySetInnerHTML`
+
+- **Detectado**: Fase Final (2026-11-11), auditoría `@security-review`.
+- Empírico: `snarkdown('<img src=x onerror=alert(1)>')` inyectaba el HTML tal
+  cual (snarkdown no sanitiza). Precondición: contenido que requiere
+  `WRITE_API_KEY` o DB comprometida → XSS almacenado en los visitantes de la
+  oferta.
+- **✅ Resuelto** (2026-11-11): `DOMPurify.sanitize(snarkdown(content))` en
+  `JobSection` (`Detail.tsx`). El resumen IA (`Streamdown`) ya sanitizaba con
+  `rehype-sanitize` ✓.
+
+## [deps] Vulnerabilidades residuales del backend (cadena AI SDK / undici)
+
+- **Detectado**: Fase Final (2026-11-11), `npm audit`.
+- Frontend: **0 vulnerabilities** tras `npm audit fix` + quitar `zod` (sin uso
+  en `src/`) + mover `playwright`/`stagehand` a devDependencies.
+- Backend: quedan **6 (2 high)** en `@fastify/busboy ← undici ←
+  @ai-sdk/provider-utils ← @ai-sdk/google ← ai`. El único fix de npm es
+  `npm audit fix --force` (**breaking**: `@ai-sdk/google` → 4.x) o subir el AI
+  SDK a un mayor con undici parcheado. Riesgo práctico bajo hoy: la API no
+  maneja multipart ni pasa input no confiable a undici (los advisories son
+  DoS/CRLF en parsing multipart).
+- **Fix futuro**: planificar upgrade de `ai` + `@ai-sdk/google` y verificar
+  con la suite (streaming real de `/ai/summary` incluido).
