@@ -46,7 +46,7 @@ Proyecto dividido en dos paquetes independientes (sin workspaces):
 5. ~~Migración a TypeScript del backend~~ → **hecho** (2026-11-09, ver §7).
 6. ~~Revisión experta + hardening del backend~~ → **hecho** (2026-11-09, `c09c132`, ver §7).
 7. ~~Corte de dominio + borrado del proyecto Vercel viejo `laburodev-api`~~ → **hecho**: el dominio `laburodev-api.santiagogoncalvez.com` ya sirve desde el proyecto nuevo `laburodev-api-docker` (verificado con helmet + guard en prod) y el proyecto viejo fue borrado por Santiago (2026-11-09).
-8. **Migración del frontend a TypeScript** — plan listo en `frontend/PLAN-TYPESCRIPT.md` (2026-11-09): conversión progresiva por capas, tipos compartidos backend↔frontend (decisión pendiente: los paquetes son independientes sin workspaces) y fase de CI (exigir `typecheck` también en `frontend/`, tocaría `ci.yml`).
+8. **Migración del frontend a TypeScript** — plan en `frontend/PLAN-TYPESCRIPT.md` (Grupos A–D; **Grupo A ejecutado 2026-11-10**: tsconfig strict, `typecheck`/`build` con `tsc -b`, contratos en `frontend/src/types/api.ts`). **Decisión de contratos**: cada paquete es dueño de su contrato — sin imports cruzados a `backend/` (el puente rompió el CI #26 al compilar backend dentro del build del front); futuro posible: monorepo `packages/shared`. El `typecheck` ya corre en CI sin tocar `ci.yml` (el `build` de frontend incluye `tsc -b`).
 
 ## 5. Docker (módulo 13 jscamp) — decisiones
 

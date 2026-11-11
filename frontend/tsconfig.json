@@ -15,10 +15,7 @@
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "noEmit": true,
-    "paths": {
-      "zod": ["./node_modules/zod"]
-    }
+    "noEmit": true
   },
   "include": ["src"]
 }

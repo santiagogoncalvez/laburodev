@@ -5,10 +5,10 @@
 
 ## 2. Grupos de Ejecución (Migración Progresiva)
 
-### Grupo A: Infraestructura de Tipos y Contratos
-- Configuración de `tsconfig.json` (React 19 + Vite).
-- Instalación de tipos: `typescript`, `@types/react`, `@types/react-dom`.
-- **Capa puente**: Crear `src/types/index.ts` que importe/re-exporte los esquemas de `backend/schemas/jobs.ts` para tener una única fuente de verdad.
+### Grupo A: Infraestructura de Tipos y Contratos ✅ (ejecutado 2026-11-10)
+- Configuración de `tsconfig.json` (React 19 + Vite, strict).
+- Instalación de tipos: `typescript` (7.x), `@types/react`, `@types/react-dom`.
+- **Contratos de datos — decisión**: ~~puente importando `backend/`~~ → **cada paquete es dueño de su contrato**. Los tipos viven en `src/types/api.ts` (espejo manual de la respuesta del backend, **cero imports cruzados**). El puente rompió el CI #26 al hacer que el build del front compilara `backend/`; se eliminó junto con el hack de `paths`/zod. **Futuro (Opción 2)**: monorepo con npm workspaces y `packages/shared` como fuente única cuando crezca lo compartido (ej. con auth/escrituras).
 
 ### Grupo B: Capa de Datos (Hooks y Servicios)
 - Migración de `src/hooks/` (ej: `useJobs.jsx`, `useAISummary.jsx`).
