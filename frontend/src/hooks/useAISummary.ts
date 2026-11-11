@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { API_URL } from "../config";
 
 export function useAISummary(jobId: string) {
@@ -6,13 +6,39 @@ export function useAISummary(jobId: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Stream activo: se aborta al regenerar, cambiar de empleo o desmontar
+  const controllerRef = useRef<AbortController | null>(null);
+  // "¿Es el primer chunk?" se decide FUERA del updater (updaters deben ser puros)
+  const firstChunkRef = useRef(true);
+
+  // PENDING_FIXES [useAISummary]: abort del stream en cleanup + reinicio al
+  // cambiar de jobId (el resumen viejo no debe verse en el empleo nuevo)
+  useEffect(() => {
+    setSummary("");
+    setError(null);
+    setLoading(false);
+
+    return () => {
+      controllerRef.current?.abort();
+      controllerRef.current = null;
+    };
+  }, [jobId]);
+
   const generateSummary = useCallback(async () => {
+    // Guard de concurrencia: cancela el stream anterior antes de arrancar uno nuevo
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
     setLoading(true);
     setError(null);
-    // NO limpiamos summary aquí - mantenemos el anterior visible
+    // NO limpiamos summary aquí - mantenemos el anterior visible hasta el 1er chunk
+    firstChunkRef.current = true;
 
     try {
-      const response = await fetch(`${API_URL}/ai/summary/${jobId}`);
+      const response = await fetch(`${API_URL}/ai/summary/${jobId}`, {
+        signal: controller.signal,
+      });
       if (!response.ok) {
         // errData como unknown + narrowing explícito (sin `as`, sin any).
         const errData: unknown = await response.json().catch(() => undefined);
@@ -35,26 +61,23 @@ export function useAISummary(jobId: string) {
       const reader = body.getReader();
       const decoder = new TextDecoder();
 
-      // Solo limpiamos cuando llega el PRIMER chunk real
-      let firstChunk = true;
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        // Stream cancelado en la ventana del await: no escribir chunks viejos
+        if (controller.signal.aborted) break;
 
         const chunkText = decoder.decode(value, { stream: true });
-        setSummary((prev) => {
-          if (firstChunk) {
-            firstChunk = false;
-            return chunkText; // reemplaza el anterior
-          }
-          return prev + chunkText;
-        });
+        // Updater puro: reemplazo vs append ya decidido antes del set
+        const isFirstChunk = firstChunkRef.current;
+        firstChunkRef.current = false;
+        setSummary((prev) => (isFirstChunk ? chunkText : prev + chunkText));
       }
     } catch (err) {
+      if (controller.signal.aborted) return; // cancelación esperada, sin error
       setError(err instanceof Error ? err.message : String(err));
-      // En error, podríamos mantener el anterior o limpiar - tu call
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, [jobId]);
 
