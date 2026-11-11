@@ -17,6 +17,12 @@ const FALLBACK_LOCATIONS = [
   "Brasil",
 ];
 
+// jobs.json guarda responsibilities/requirements como string markdown;
+// parseJsonArray (models/jobs) espera JSON-array → se envuelve al sembrar.
+// Las filas viejas con JSON-string las tolera el fix de parseJsonArray.
+const toArray = (value: unknown): unknown[] =>
+  value == null ? [] : Array.isArray(value) ? value : [value];
+
 async function seed() {
   try {
     // Reset: solo para aprendizaje/curso — recrea todo desde cero
@@ -99,8 +105,8 @@ async function seed() {
           modality,
           JSON.stringify(techArray),
           job.content.description,
-          JSON.stringify(job.content.responsibilities),
-          JSON.stringify(job.content.requirements),
+          JSON.stringify(toArray(job.content.responsibilities)),
+          JSON.stringify(toArray(job.content.requirements)),
           job.content.about,
         ],
       });

@@ -12,9 +12,11 @@ function parseJsonArray(v: unknown): string[] {
    if (typeof v !== "string" || v === "") return [];
    try {
       const parsed: unknown = JSON.parse(v);
-      return Array.isArray(parsed)
-         ? parsed.filter((x): x is string => typeof x === "string")
-         : [];
+      if (Array.isArray(parsed)) {
+         return parsed.filter((x): x is string => typeof x === "string");
+      }
+      // JSON-string (filas viejas del seed: JSON.stringify(string)) → un elemento
+      return typeof parsed === "string" ? [parsed] : [];
    } catch {
       return [];
    }
