@@ -1,10 +1,10 @@
 import { useState, useCallback } from "react";
-import { API_URL } from "../config.js";
+import { API_URL } from "../config";
 
-export function useAISummary(jobId) {
+export function useAISummary(jobId: string) {
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const generateSummary = useCallback(async () => {
     setLoading(true);
@@ -14,11 +14,25 @@ export function useAISummary(jobId) {
     try {
       const response = await fetch(`${API_URL}/ai/summary/${jobId}`);
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || "Error generando el resumen");
+        // errData como unknown + narrowing explícito (sin `as`, sin any).
+        const errData: unknown = await response.json().catch(() => undefined);
+        const apiMessage =
+          typeof errData === "object" &&
+          errData !== null &&
+          "error" in errData &&
+          typeof errData.error === "string"
+            ? errData.error
+            : undefined;
+        throw new Error(apiMessage ?? "Error generando el resumen");
       }
 
-      const reader = response.body.getReader();
+      // body es ReadableStream | null en los tipos: guard explícito (sin `!`).
+      const body = response.body;
+      if (!body) {
+        throw new Error("La respuesta no incluye stream de contenido");
+      }
+
+      const reader = body.getReader();
       const decoder = new TextDecoder();
 
       // Solo limpiamos cuando llega el PRIMER chunk real
@@ -37,7 +51,7 @@ export function useAISummary(jobId) {
         });
       }
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : String(err));
       // En error, podríamos mantener el anterior o limpiar - tu call
     } finally {
       setLoading(false);

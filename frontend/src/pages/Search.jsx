@@ -6,7 +6,7 @@ import { SearchFormSection } from '../components/SearchFormSection.jsx'
 import { JobListings } from '../components/JobListings.jsx'
 import { SearchResultsSkeleton } from '../components/SearchResultsSkeleton.jsx'
 import { Skeleton } from '../components/Skeleton.jsx'
-import { API_URL } from '../config.js'
+import { API_URL } from '../config'
 import styles from './Search.module.css'
 
 const RESULTS_PER_PAGE = 10

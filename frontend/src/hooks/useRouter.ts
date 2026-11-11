@@ -4,7 +4,7 @@ export function useRouter() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  function navigateTo(path) {
+  function navigateTo(path: string): void {
     navigate(path)
   }
 

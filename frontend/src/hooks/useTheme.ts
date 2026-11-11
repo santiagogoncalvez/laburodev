@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 
 const STORAGE_KEY = "laburodev-theme";
 
-function initialTheme() {
+type Theme = "light" | "dark";
+
+function initialTheme(): Theme {
    const saved = localStorage.getItem(STORAGE_KEY);
    if (saved === "light" || saved === "dark") return saved;
    return window.matchMedia("(prefers-color-scheme: light)").matches
@@ -11,7 +13,7 @@ function initialTheme() {
 }
 
 export function useTheme() {
-   const [theme, setTheme] = useState(initialTheme);
+   const [theme, setTheme] = useState<Theme>(initialTheme);
 
    useEffect(() => {
       document.documentElement.dataset.theme = theme;
