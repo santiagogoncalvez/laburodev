@@ -12,19 +12,18 @@
     "test:ai": "node ai-e2e/test-laburodev.js"
   },
   "dependencies": {
-    "@browserbasehq/stagehand": "^4.2.1",
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "dompurify": "^3.4.17",
     "lucide-react": "^1.55.0",
-    "playwright": "^1.64.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router": "^7.9.6",
     "snarkdown": "^2.0.0",
     "streamdown": "^2.2.0",
-    "zod": "^4.6.7",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@browserbasehq/stagehand": "^4.4.0",
     "@eslint/js": "^9.36.0",
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.5",
@@ -35,6 +34,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.22",
     "globals": "^16.4.0",
+    "playwright": "^1.65.0",
     "typescript": "^7.0.2",
     "vite": "^7.1.7"
   }
