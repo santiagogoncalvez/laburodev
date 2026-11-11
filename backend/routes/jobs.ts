@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { JobController } from "../controllers/jobs.js";
-import { writeGuard } from "../middlewares/writeGuard.js";
+import { JobController } from "@/controllers/jobs.js";
+import { writeGuard } from "@/middlewares/writeGuard.js";
 
 export const jobsRouter = Router();
 

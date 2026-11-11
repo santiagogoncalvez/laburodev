@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { JobService } from "../services/jobsService.js";
-import { DEFAULTS } from "../config.js";
-import { validateJob, validatePartialJob } from "../schemas/jobs.js";
+import { JobService } from "@/services/jobsService.js";
+import { DEFAULTS } from "@/config.js";
+import { validateJob, validatePartialJob } from "@/schemas/jobs.js";
 
 function validationError(res: Response, result: { error: { issues: { message: string }[] } }) {
    return res.status(400).json({ message: result.error.issues[0].message });

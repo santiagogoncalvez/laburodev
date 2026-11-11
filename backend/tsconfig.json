@@ -15,7 +15,10 @@
     "sourceMap": false,
     "allowJs": true,
     "checkJs": false,
-    "noEmit": false
+    "noEmit": false,
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
   "include": ["**/*.ts", "**/*.js"],
   "exclude": ["node_modules", "dist", "*.test.js", "**/*.test.js", "tests"]

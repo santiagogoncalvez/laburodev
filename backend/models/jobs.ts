@@ -1,7 +1,7 @@
-import { db } from "../db/index.js";
+import { db } from "@/db/index.js";
 import type { Row } from "@libsql/client";
-import type { Job, GetAllParams, PaginatedJobsResponse } from "../types/index.js";
-import type { JobInput, JobUpdateInput, JobDataInput, JobContentInput } from "../schemas/jobs.js";
+import type { Job, GetAllParams, PaginatedJobsResponse } from "@/types/index.js";
+import type { JobInput, JobUpdateInput, JobDataInput, JobContentInput } from "@/schemas/jobs.js";
 
 // Helpers de normalización en el límite con la DB: todo verificado, sin `as`.
 function asString(v: unknown): string {

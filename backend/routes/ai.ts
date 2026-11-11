@@ -3,9 +3,9 @@ import { streamText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import * as z from "zod";
 
-import { JobModel } from "../models/jobs.js";
-import { aiRateLimiter } from "../middlewares/rateLimit.js";
-import { CONFIG } from "../config.js";
+import { JobModel } from "@/models/jobs.js";
+import { aiRateLimiter } from "@/middlewares/rateLimit.js";
+import { CONFIG } from "@/config.js";
 
 const google = createGoogleGenerativeAI({
    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,

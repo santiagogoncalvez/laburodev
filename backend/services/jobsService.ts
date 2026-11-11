@@ -1,6 +1,6 @@
-import { JobModel } from "../models/jobs.js";
-import type { GetAllParams } from "../types/index.js";
-import type { JobInput, JobUpdateInput } from "../schemas/jobs.js";
+import { JobModel } from "@/models/jobs.js";
+import type { GetAllParams } from "@/types/index.js";
+import type { JobInput, JobUpdateInput } from "@/schemas/jobs.js";
 
 export class JobService {
     static async getAll(params: GetAllParams) {
