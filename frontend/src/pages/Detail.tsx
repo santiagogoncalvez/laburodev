@@ -6,6 +6,7 @@ import { formatJobLevel } from "../constants/levels"
 import { API_URL } from "../config"
 import { Link } from "../components/Link"
 import snarkdown from 'snarkdown'
+import DOMPurify from 'dompurify'
 import styles from './Detail.module.css'
 import { useFavoritesStore } from "../store/favoritesStore"
 import { AISummary } from "../components/AISummary"
@@ -17,7 +18,9 @@ interface JobSectionProps {
 }
 
 function JobSection ({ title, content }: JobSectionProps) {
-  const html = snarkdown(content)
+  // XSS (auditoría 2026-11-11): snarkdown deja pasar HTML crudo → DOMPurify
+  // sanea el markdown renderizado antes de inyectarlo al DOM.
+  const html = DOMPurify.sanitize(snarkdown(content))
 
   return (
     <section className={styles.section}>
@@ -115,24 +118,38 @@ export default function JobDetail () {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch(`${API_URL}/jobs/${jobId}`)
-       .then((response) => {
-          if (!response.ok) {
-             navigate("/not-found");
-          }
+    // PENDING_FIXES [Detail]: AbortController + flag de cancelación + !ok corta
+    const controller = new AbortController()
 
-          return response.json();
-       })
-       .then((json: Job) => {
-          setJob(json);
-       })
-       .catch((err: unknown) => {
-          setError(err instanceof Error ? err.message : String(err));
-       })
-       .finally(() => {
-          setLoading(false);
-       });
-  }, [jobId])
+    async function loadJob () {
+      try {
+        const response = await fetch(`${API_URL}/jobs/${jobId}`, {
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          navigate("/not-found")
+          return
+        }
+
+        const json: Job = await response.json()
+        setJob(json)
+      } catch (err) {
+        // Cancelación esperada (cambio de jobId / desmontaje): no es error
+        if (!controller.signal.aborted) {
+          setError(err instanceof Error ? err.message : String(err))
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadJob()
+
+    return () => controller.abort()
+  }, [jobId, navigate])
 
   if (loading) {
     return (
