@@ -28,6 +28,7 @@ export default function Register() {
 
   return (
     <div className={styles.container}>
+      <title>Crear cuenta · laburoDev</title>
       <div className={styles.card}>
         <h1 className={styles.title}>Crear Cuenta</h1>
         <p className={styles.subtitle}>

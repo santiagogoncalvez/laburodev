@@ -7,6 +7,7 @@ export default function Profile() {
 
   return (
     <div style={{ maxWidth: '44rem', margin: '0 auto', padding: 'var(--space-5) var(--gutter)' }}>
+      <title>Perfil · laburoDev</title>
       <div className={styles.container}>
         <div className={styles.header}>
           <div className={styles.avatar}>

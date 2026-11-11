@@ -20,6 +20,7 @@ export default function HomePage () {
 
   return (
     <main>
+      <title>laburoDev · Empleos para desarrolladores</title>
       <section className="jobs-search">
         <h1>Encontrá el trabajo que buscás</h1>
         <p>La comunidad de desarrolladores donde están las mejores oportunidades.</p>

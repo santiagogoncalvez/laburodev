@@ -145,6 +145,7 @@ export default function JobDetail () {
   if (error || !job) {
     return (
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
+        <title>Oferta no encontrada · laburoDev</title>
         <div className={styles.error}>
           <h2 className={styles.errorTitle}>
             Oferta no encontrada
@@ -162,6 +163,7 @@ export default function JobDetail () {
 
   return (
     <div className={styles.container}>
+      <title>{job.title} · laburoDev</title>
       <DetailPageBreadCrumb job={job} />
       <DetailPageHeader job={job} />
       <AISummary jobId={job.id} />

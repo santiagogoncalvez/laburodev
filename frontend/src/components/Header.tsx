@@ -5,10 +5,9 @@ import { useAuthStore } from '../store/authStore'
 import { useFavoritesStore } from '../store/favoritesStore'
 
 export function Header () {
-  const { isLoggedIn } = useAuthStore()
-  const { countFavorites } = useFavoritesStore()
-
-  const numberOfFavorites = countFavorites()
+  // Selectores por valor: re-render solo cuando cambia lo que se usa en render
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
+  const numberOfFavorites = useFavoritesStore((state) => state.favorites.length)
 
   return (
     <header>
@@ -45,8 +44,10 @@ export function Header () {
 }
 
 const HeaderUserButton = () => {
-  const { isLoggedIn, logout } = useAuthStore()
-  const { clearFavorites } = useFavoritesStore()
+  // Selectores: acciones estables (referencias fijas) no disparan renders
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
+  const logout = useAuthStore((state) => state.logout)
+  const clearFavorites = useFavoritesStore((state) => state.clearFavorites)
 
   const handleLogout = () => {
     logout()

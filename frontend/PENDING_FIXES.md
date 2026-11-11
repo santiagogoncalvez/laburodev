@@ -22,10 +22,23 @@ fase de estabilización posterior.
   deben ser puros. React puede invocarlos más de una vez (StrictMode o modo
   concurrencia) y el resultado sería `prev + chunk` en vez de reemplazar el
   resumen anterior → primer chunk duplicado. Hoy **no manifiesta** porque
-  `main.jsx` no envuelve la app en `<StrictMode>`, pero es una bomba de
+  `main.tsx` no envuelve la app en `<StrictMode>`, pero es una bomba de
   tiempo si se activa.
 - **Fix futuro**: decidir "reemplazo vs append" fuera del updater (un `ref`
   booleano) y pasarle el valor ya calculado.
+
+## [App/SEO] SPA sin status HTTP 404 real ni meta og:
+
+- **Detectado**: Grupo D (2026-11-11), verificación de metadata/SEO.
+- El wildcard `path="*"` renderiza `NotFoundPage` correctamente, pero el
+  servidor responde **200** en URLs inexistentes (Vercel sirve el SPA con
+  rewrite) — los crawlers ven "200 OK" en páginas que no existen.
+- Tampoco hay meta `og:`/`twitter:` por página: los scrapers que **no
+  ejecutan JS** (la mayoría de los que leen og:) solo ven el HTML inicial.
+- Fix futuro (solo si el SEO de URLs externas importa): prerender/SSG de
+  rutas o edge middleware en Vercel que responda 404 real + HTML prerendered.
+- Nota: títulos por página ✓ implementados en Grupo D (React 19 hoistea
+  `<title>` a `<head>`), description global ✓ en `index.html`.
 
 ## [useAISummary] Sin guard de concurrencia en `generateSummary`
 

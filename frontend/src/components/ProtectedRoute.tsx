@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, redirectTo = '/login' }: ProtectedRouteProps) {
-  const { isLoggedIn } = useAuthStore()
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
 
   if (!isLoggedIn) {
     return <Navigate to={redirectTo} replace />

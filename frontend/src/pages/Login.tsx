@@ -25,6 +25,7 @@ export default function Login() {
 
   return (
     <div className={styles.container}>
+      <title>Iniciar sesión · laburoDev</title>
       <div className={styles.card}>
         <h1 className={styles.title}>Iniciar Sesión</h1>
         <p className={styles.subtitle}>

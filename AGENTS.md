@@ -8,7 +8,7 @@ Toda la documentación, planes de trabajo, notas de arquitectura y entregables d
 ## Estructura
 
 - **Paquetes independientes**: `frontend/` y `backend/` son hermanos, sin npm workspaces. Cada uno tiene su `package.json`, su lockfile y su `node_modules`.
-- `frontend/` — Vite + React 19 + SWC + Zustand + React Router v7 + Streamdown. Entry: `src/main.jsx` → `src/App.jsx`.
+- `frontend/` — Vite + React 19 + SWC + Zustand + React Router v7 + Streamdown. Entry: `src/main.tsx` → `src/App.tsx`. **100% TypeScript** (`npm run typecheck` = `tsc -b`, también corre en CI vía `build`).
 - `backend/` — Express 5 + **TypeScript** + Zod + Vercel AI SDK (`ai`, `@ai-sdk/google`). Entry: `app.ts` (`npm run build` → `dist/`). Capas: `routes/` → `controllers/` → `services/` → `models/` → `db/`.
 - **Persistencia**: Turso (libSQL) vía `@libsql/client`. Sin `TURSO_DATABASE_URL` cae a SQLite local (`file:local.db`). `jobs.json` ya no es la fuente de datos de la API: es el dataset de origen del seed.
 
