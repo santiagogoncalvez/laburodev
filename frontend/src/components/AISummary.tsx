@@ -3,7 +3,11 @@ import { Streamdown } from "streamdown";
 import { useAISummary } from "../hooks/useAISummary";
 import styles from "./AISummary.module.css";
 
-function AISummary({ jobId }) {
+interface AISummaryProps {
+  jobId: string;
+}
+
+function AISummary({ jobId }: AISummaryProps) {
   const { summary, loading, error, generateSummary } = useAISummary(jobId);
 
   // Si hay error, SIEMPRE mostrar vista de error (incluso si hay summary previo)

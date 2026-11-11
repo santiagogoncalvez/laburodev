@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
-import { Pagination } from '../components/Pagination.jsx'
-import { SearchFormSection } from '../components/SearchFormSection.jsx'
-import { JobListings } from '../components/JobListings.jsx'
-import { SearchResultsSkeleton } from '../components/SearchResultsSkeleton.jsx'
-import { Skeleton } from '../components/Skeleton.jsx'
+import { Pagination } from '../components/Pagination'
+import { SearchFormSection, type JobFilters } from '../components/SearchFormSection'
+import { JobListings } from '../components/JobListings'
+import { SearchResultsSkeleton } from '../components/SearchResultsSkeleton'
+import { Skeleton } from '../components/Skeleton'
 import { API_URL } from '../config'
 import styles from './Search.module.css'
+import type { Job, PaginatedJobsResponse } from '../types/api'
 
 const RESULTS_PER_PAGE = 10
 
 const useFilters = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const readFromParams = (sp) => {
+  const readFromParams = (sp: URLSearchParams) => {
     const page = Number(sp.get('page'))
     return {
       filters: {
@@ -27,16 +28,16 @@ const useFilters = () => {
     }
   }
 
-  const [filters, setFilters] = useState(() => readFromParams(searchParams).filters)
+  const [filters, setFilters] = useState<JobFilters>(() => readFromParams(searchParams).filters)
 
   const [textToFilter, setTextToFilter] = useState(() => readFromParams(searchParams).text)
 
   const [currentPage, setCurrentPage] = useState(() => readFromParams(searchParams).page)
 
-  const [jobs, setJobs] = useState([])
+  const [jobs, setJobs] = useState<Job[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchJobs() {
@@ -50,26 +51,27 @@ const useFilters = () => {
         if (filters.experienceLevel) params.append('level', filters.experienceLevel)
 
         const offset = (currentPage - 1) * RESULTS_PER_PAGE
-        params.append('limit', RESULTS_PER_PAGE)
-        params.append('offset', offset)
+        params.append('limit', String(RESULTS_PER_PAGE))
+        params.append('offset', String(offset))
 
         const queryParams = params.toString()
-      
+
         const response = await fetch(
            `${API_URL}/jobs?${queryParams}`,
         );
 
         if (!response.ok) {
-          const errBody = await response.json().catch(() => ({}))
+          const errBody: { message?: string } = await response.json().catch(() => ({}))
           throw new Error(errBody.message || `Error ${response.status}`)
         }
 
-        const json = await response.json()
+        // Defensivo: campos opcionales en el parseo, ver types/api.ts
+        const json: Partial<PaginatedJobsResponse> = await response.json()
 
         setJobs(json.data ?? [])
         setTotal(json.total ?? 0)
         setError(null)
-      } catch (error) {
+      } catch {
         setError('No se pudieron cargar los empleos. Revisá que la API esté corriendo.')
       } finally {
         setLoading(false)
@@ -94,31 +96,31 @@ const useFilters = () => {
   }, [searchParams])
 
   // La URL solo se escribe acá (acciones del usuario), nunca en efectos.
-  const writeParams = ({ text, filters, page }) => {
+  const writeParams = ({ text, filters, page }: { text: string; filters: JobFilters; page: number }) => {
     const params = new URLSearchParams()
     if (text) params.set('text', text)
     if (filters.technology) params.set('technology', filters.technology)
     if (filters.location) params.set('type', filters.location)
     if (filters.experienceLevel) params.set('level', filters.experienceLevel)
 
-    if (page > 1) params.set('page', page)
+    if (page > 1) params.set('page', String(page))
 
     return params
   }
 
   const totalPages = Math.ceil(total / RESULTS_PER_PAGE)
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     setSearchParams(writeParams({ text: textToFilter, filters, page }))
     // Misma ruta (?page=): el reset general no dispara, el scroll va en la acción
     window.scrollTo(0, 0)
   }
 
-  const handleSearch = (nextFilters) => {
+  const handleSearch = (nextFilters: JobFilters) => {
     setSearchParams(writeParams({ text: textToFilter, filters: nextFilters, page: 1 }))
   }
 
-  const handleTextFilter = (newTextToFilter) => {
+  const handleTextFilter = (newTextToFilter: string) => {
     // replace: tipear no llena el historial de entradas intermedias
     setSearchParams(
       writeParams({ text: newTextToFilter, filters, page: 1 }),

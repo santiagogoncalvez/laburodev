@@ -1,6 +1,12 @@
-import { JobCard } from './JobCard.jsx'
+import { JobCard } from './JobCard'
+import type { Job } from '../types/api'
 
-export function JobListings ({ jobs, onClear }) {
+interface JobListingsProps {
+  jobs: Job[]
+  onClear?: () => void
+}
+
+export function JobListings ({ jobs, onClear }: JobListingsProps) {
   return (
     <>
       <div className="jobs-listings">

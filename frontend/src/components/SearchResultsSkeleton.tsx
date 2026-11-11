@@ -1,7 +1,11 @@
 import { JobCardSkeleton } from "./JobCardSkeleton";
 import { Skeleton } from "./Skeleton";
 
-export function SearchResultsSkeleton({ count = 4 }) {
+interface SearchResultsSkeletonProps {
+   count?: number;
+}
+
+export function SearchResultsSkeleton({ count = 4 }: SearchResultsSkeletonProps) {
    return (
       <>
          <div className="jobs-listings" role="status" aria-label="Cargando empleos">

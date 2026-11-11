@@ -1,7 +1,20 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export const useFavoritesStore = create(
+interface FavoritesState {
+  // Estado
+  favorites: string[]
+
+  // Acciones
+  clearFavorites: () => void
+  addFavorite: (jobId: string) => void
+  removeFavorite: (jobId: string) => void
+  isFavorite: (jobId: string) => boolean
+  toggleFavorite: (jobId: string) => void
+  countFavorites: () => number
+}
+
+export const useFavoritesStore = create<FavoritesState>()(
   persist(
     (set, get) => ({
       // Estado

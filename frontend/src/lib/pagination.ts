@@ -1,7 +1,15 @@
 // Paginación acotada estilo GitHub: primera y última siempre visibles,
 // hermanos alrededor de la actual, elipsis en los saltos.
 // Lógica pura y testeable: no toca DOM ni router.
-export function getVisiblePages(currentPage, pageCount, siblingCount = 2) {
+
+/** Ítem visible de paginación: número de página o elipsis. */
+export type PageItem = number | "ellipsis";
+
+export function getVisiblePages(
+   currentPage: number,
+   pageCount: number,
+   siblingCount = 2
+): PageItem[] {
    const maxItems = siblingCount * 2 + 5;
    // siblingCount 2: 1 + ellipsis + 5 centrales + ellipsis + 1 = 9
 
@@ -19,7 +27,7 @@ export function getVisiblePages(currentPage, pageCount, siblingCount = 2) {
    if (!showLeftEllipsis) {
       const visibleCount = maxItems - 2;
       // quitamos: ellipsis + última página
-      const pages = [];
+      const pages: PageItem[] = [];
       for (let i = 1; i <= visibleCount; i++) {
          pages.push(i);
       }
@@ -31,7 +39,7 @@ export function getVisiblePages(currentPage, pageCount, siblingCount = 2) {
    // Final
    if (!showRightEllipsis) {
       const visibleCount = maxItems - 2;
-      const pages = [1, "ellipsis"];
+      const pages: PageItem[] = [1, "ellipsis"];
       const from = pageCount - visibleCount + 1;
       for (let i = from; i <= pageCount; i++) {
          pages.push(i);
@@ -40,7 +48,7 @@ export function getVisiblePages(currentPage, pageCount, siblingCount = 2) {
    }
 
    // Centro
-   const pages = [1, "ellipsis"];
+   const pages: PageItem[] = [1, "ellipsis"];
    for (let i = start; i <= end; i++) {
       pages.push(i);
    }

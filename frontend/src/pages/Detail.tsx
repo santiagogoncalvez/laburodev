@@ -2,15 +2,21 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router"
 import { Building2, Heart, MapPin, Signal } from "lucide-react"
 import { JobDetailSkeleton } from "../components/JobDetailSkeleton"
-import { formatJobLevel } from "../constants/levels.js"
+import { formatJobLevel } from "../constants/levels"
 import { API_URL } from "../config"
 import { Link } from "../components/Link"
 import snarkdown from 'snarkdown'
 import styles from './Detail.module.css'
 import { useFavoritesStore } from "../store/favoritesStore"
 import { AISummary } from "../components/AISummary"
+import type { Job } from "../types/api"
 
-function JobSection ({ title, content }) {
+interface JobSectionProps {
+  title: string
+  content: string
+}
+
+function JobSection ({ title, content }: JobSectionProps) {
   const html = snarkdown(content)
 
   return (
@@ -30,7 +36,11 @@ function JobSection ({ title, content }) {
   )
 }
 
-function DetailPageBreadCrumb ({ job }) {
+interface DetailPageBreadCrumbProps {
+  job: Job
+}
+
+function DetailPageBreadCrumb ({ job }: DetailPageBreadCrumbProps) {
   return (
     <nav className={styles.breadcrumb}>
       <Link
@@ -45,7 +55,11 @@ function DetailPageBreadCrumb ({ job }) {
   )
 }
 
-function DetailPageHeader ({ job }) {
+interface DetailPageHeaderProps {
+  job: Job
+}
+
+function DetailPageHeader ({ job }: DetailPageHeaderProps) {
   return (
     <header className={styles.header}>
       <div className={styles.titleRow}>
@@ -72,7 +86,11 @@ function DetailPageHeader ({ job }) {
   )
 }
 
-function DetailFavoriteButton ({ jobId }) {
+interface DetailFavoriteButtonProps {
+  jobId: string
+}
+
+function DetailFavoriteButton ({ jobId }: DetailFavoriteButtonProps) {
   const { isFavorite, toggleFavorite } = useFavoritesStore()
   const fav = isFavorite(jobId)
 
@@ -92,9 +110,9 @@ export default function JobDetail () {
   const { jobId } = useParams()
   const navigate = useNavigate()
 
-  const [job, setJob] = useState(null)
+  const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch(`${API_URL}/jobs/${jobId}`)
@@ -105,11 +123,11 @@ export default function JobDetail () {
 
           return response.json();
        })
-       .then((json) => {
+       .then((json: Job) => {
           setJob(json);
        })
-       .catch((err) => {
-          setError(err.message);
+       .catch((err: unknown) => {
+          setError(err instanceof Error ? err.message : String(err));
        })
        .finally(() => {
           setLoading(false);
@@ -149,8 +167,10 @@ export default function JobDetail () {
       <AISummary jobId={job.id} />
 
       <JobSection title="Descripción del puesto" content={job.content.description} />
-      <JobSection title="Responsabilidades" content={job.content.responsibilities} />
-      <JobSection title="Requisitios" content={job.content.requirements} />
+      {/* La API devuelve string[] (join → markdown líneas); ver PENDING_FIXES.md
+          sobre el origen de datos (seed → parseJsonArray → [] siempre). */}
+      <JobSection title="Responsabilidades" content={job.content.responsibilities.join("\n")} />
+      <JobSection title="Requisitios" content={job.content.requirements.join("\n")} />
       <JobSection title="Acerca de la empresa" content={job.content.about} />
     </div>
   )

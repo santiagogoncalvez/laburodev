@@ -1,19 +1,19 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router'
 
-import { Header } from './components/Header.jsx'
-import { Footer } from './components/Footer.jsx'
-import { ProtectedRoute } from './components/ProtectedRoute.jsx'
-import { RouteFallback } from './components/RouteFallback.jsx'
-import { ScrollToTop } from './components/ScrollToTop.jsx'
+import { Header } from './components/Header'
+import { Footer } from './components/Footer'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { RouteFallback } from './components/RouteFallback'
+import { ScrollToTop } from './components/ScrollToTop'
 
-const HomePage = lazy(() => import('./pages/Home.jsx'))
-const SearchPage = lazy(() => import('./pages/Search.jsx'))
-const NotFoundPage = lazy(() => import('./pages/404.jsx'))
-const JobDetail = lazy(() => import('./pages/Detail.jsx'))
-const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'))
-const Login = lazy(() => import('./pages/Login.jsx'))
-const Register = lazy(() => import('./pages/Register.jsx'))
+const HomePage = lazy(() => import('./pages/Home'))
+const SearchPage = lazy(() => import('./pages/Search'))
+const NotFoundPage = lazy(() => import('./pages/404'))
+const JobDetail = lazy(() => import('./pages/Detail'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
 
 function App() {
   return (

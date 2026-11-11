@@ -1,10 +1,15 @@
 import { Building2, Heart, MapPin, Signal, Wifi, Home } from "lucide-react";
 import { Link } from "./Link";
-import { formatJobLevel } from "../constants/levels.js";
+import { formatJobLevel } from "../constants/levels";
 import styles from "./JobCard.module.css";
 import { useFavoritesStore } from "../store/favoritesStore";
+import type { Job } from "../types/api";
 
-function JobCardFavoriteButton({ jobId }) {
+interface JobCardFavoriteButtonProps {
+   jobId: string;
+}
+
+function JobCardFavoriteButton({ jobId }: JobCardFavoriteButtonProps) {
    const { toggleFavorite, isFavorite } = useFavoritesStore();
    const fav = isFavorite(jobId);
 
@@ -20,14 +25,18 @@ function JobCardFavoriteButton({ jobId }) {
    );
 }
 
-function techList(job) {
+function techList(job: Job): string[] {
    const tech = job.data?.technology;
    if (Array.isArray(tech)) return tech.slice(0, 3);
    if (typeof tech === "string") return [tech];
    return [];
 }
 
-export function JobCard({ job }) {
+interface JobCardProps {
+   job: Job;
+}
+
+export function JobCard({ job }: JobCardProps) {
    return (
       <article className="job-listing-card">
          <div>

@@ -1,23 +1,26 @@
-import { useId } from 'react'
+import { useId, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { useAuthStore } from '../store/authStore'
 import styles from './Auth.module.css'
+import { useAuthStore } from '../store/authStore'
 
-export default function Login() {
+export default function Register() {
+  const nameId = useId()
+  const emailId = useId()
+  const passwordId = useId()
+
   const { login } = useAuthStore()
   const navigate = useNavigate()
-  const passwordId = useId()
-  const emailId = useId()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    const formData = new FormData(e.target)
+    const formData = new FormData(e.currentTarget)
+    const name = formData.get(nameId)
     const email = formData.get(emailId)
     const password = formData.get(passwordId)
-    
-    // Mock login - en una app real, harías una petición a la API
-    if (email && password) {
+
+    // Mock register - en una app real, harías una petición a la API
+    if (name && email && password) {
       login()
       navigate('/search')
     }
@@ -26,20 +29,33 @@ export default function Login() {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <h1 className={styles.title}>Iniciar Sesión</h1>
+        <h1 className={styles.title}>Crear Cuenta</h1>
         <p className={styles.subtitle}>
-          Accede a tu cuenta para aplicar a ofertas
+          Regístrate para aplicar a ofertas de trabajo
         </p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGroup}>
+            <label htmlFor="name" className={styles.label}>
+              Nombre completo
+            </label>
+            <input
+              id={nameId}
+              name={nameId}
+              type="text"
+              className={styles.input}
+              placeholder="Juan Pérez"
+              required
+            />
+          </div>
           <div className={styles.formGroup}>
             <label htmlFor={emailId} className={styles.label}>
               Email
             </label>
             <input
               id={emailId}
-              type="email"
               name={emailId}
+              type="email"
               className={styles.input}
               placeholder="tu@email.com"
               required
@@ -47,7 +63,7 @@ export default function Login() {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor={passwordId} className={styles.label}>
+            <label htmlFor="password" className={styles.label}>
               Contraseña
             </label>
             <input
@@ -61,14 +77,14 @@ export default function Login() {
           </div>
 
           <button type="submit" className={styles.submitButton}>
-            Iniciar Sesión
+            Crear Cuenta
           </button>
         </form>
 
         <p className={styles.footer}>
-          ¿No tienes cuenta?{' '}
-          <a href="/register" className={styles.link}>
-            Regístrate aquí
+          ¿Ya tienes cuenta?{' '}
+          <a href="/login" className={styles.link}>
+            Inicia sesión aquí
           </a>
         </p>
       </div>

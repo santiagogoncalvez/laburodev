@@ -1,3 +1,4 @@
+import { type FormEvent } from "react"
 import { useRouter } from "../hooks/useRouter"
 import { Search } from "lucide-react"
 import styles from "./Home.module.css"
@@ -5,12 +6,12 @@ import styles from "./Home.module.css"
 export default function HomePage () {
   const { navigateTo } = useRouter()
 
-  const handleSearch = (event) => {
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const formData = new FormData(event.target)
+    const formData = new FormData(event.currentTarget)
     const searchTerm = formData.get('search')
 
-    const url = searchTerm
+    const url = typeof searchTerm === "string" && searchTerm
       ? `/search?text=${encodeURIComponent(searchTerm)}`
       : '/search'
 

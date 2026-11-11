@@ -1,31 +1,38 @@
+import type { CSSProperties, MouseEvent } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { getVisiblePages } from '../lib/pagination.js'
+import { getVisiblePages } from '../lib/pagination'
 import styles from './Pagination.module.css'
 
-export function Pagination ({ currentPage = 1, totalPages = 10, onPageChange }) {
+interface PaginationProps {
+  currentPage?: number
+  totalPages?: number
+  onPageChange: (page: number) => void
+}
+
+export function Pagination ({ currentPage = 1, totalPages = 10, onPageChange }: PaginationProps) {
   const pages = getVisiblePages(currentPage, totalPages)
 
   const isFirstPage = currentPage === 1
   const isLastPage = currentPage === totalPages
 
-  const stylePrevButton = isFirstPage ? { pointerEvents: 'none', opacity: 0.5 } : {}
-  const styleNextButton = isLastPage ? { pointerEvents: 'none', opacity: 0.5 } : {}
+  const stylePrevButton: CSSProperties = isFirstPage ? { pointerEvents: 'none', opacity: 0.5 } : {}
+  const styleNextButton: CSSProperties = isLastPage ? { pointerEvents: 'none', opacity: 0.5 } : {}
 
-  const handlePrevClick = (event) => {
+  const handlePrevClick = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault()
     if (isFirstPage === false) {
       onPageChange(currentPage - 1)
     }
   }
 
-  const handleNextClick = (event) => {
+  const handleNextClick = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault()
     if (isLastPage === false) {
       onPageChange(currentPage + 1)
     }
   }
 
-  const handleChangePage = (event) => {
+  const handleChangePage = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault()
     const page = Number(event.currentTarget.dataset.page)
 
@@ -34,9 +41,9 @@ export function Pagination ({ currentPage = 1, totalPages = 10, onPageChange }) 
     }
   }
 
-  const buildPageUrl = (page) => {
-    const url = new URL(window.location)
-    url.searchParams.set('page', page)
+  const buildPageUrl = (page: number): string => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('page', String(page))
     return `${url.pathname}?${url.searchParams.toString()}`
   }
 

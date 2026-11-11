@@ -1,26 +1,23 @@
-import { useId } from 'react'
+import { useId, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import styles from './Auth.module.css'
 import { useAuthStore } from '../store/authStore'
+import styles from './Auth.module.css'
 
-export default function Register() {
-  const nameId = useId()
-  const emailId = useId()
-  const passwordId = useId()
-
+export default function Login() {
   const { login } = useAuthStore()
   const navigate = useNavigate()
+  const passwordId = useId()
+  const emailId = useId()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    const formData = new FormData(e.target)
-    const name = formData.get(nameId)
+    const formData = new FormData(e.currentTarget)
     const email = formData.get(emailId)
     const password = formData.get(passwordId)
 
-    // Mock register - en una app real, harías una petición a la API
-    if (name && email && password) {
+    // Mock login - en una app real, harías una petición a la API
+    if (email && password) {
       login()
       navigate('/search')
     }
@@ -29,33 +26,20 @@ export default function Register() {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <h1 className={styles.title}>Crear Cuenta</h1>
+        <h1 className={styles.title}>Iniciar Sesión</h1>
         <p className={styles.subtitle}>
-          Regístrate para aplicar a ofertas de trabajo
+          Accede a tu cuenta para aplicar a ofertas
         </p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="name" className={styles.label}>
-              Nombre completo
-            </label>
-            <input
-              id={nameId}
-              name={nameId}
-              type="text"
-              className={styles.input}
-              placeholder="Juan Pérez"
-              required
-            />
-          </div>  
           <div className={styles.formGroup}>
             <label htmlFor={emailId} className={styles.label}>
               Email
             </label>
             <input
               id={emailId}
-              name={emailId}
               type="email"
+              name={emailId}
               className={styles.input}
               placeholder="tu@email.com"
               required
@@ -63,7 +47,7 @@ export default function Register() {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="password" className={styles.label}>
+            <label htmlFor={passwordId} className={styles.label}>
               Contraseña
             </label>
             <input
@@ -77,14 +61,14 @@ export default function Register() {
           </div>
 
           <button type="submit" className={styles.submitButton}>
-            Crear Cuenta
+            Iniciar Sesión
           </button>
         </form>
 
         <p className={styles.footer}>
-          ¿Ya tienes cuenta?{' '}
-          <a href="/login" className={styles.link}>
-            Inicia sesión aquí
+          ¿No tienes cuenta?{' '}
+          <a href="/register" className={styles.link}>
+            Regístrate aquí
           </a>
         </p>
       </div>

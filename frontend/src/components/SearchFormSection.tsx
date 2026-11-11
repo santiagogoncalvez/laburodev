@@ -1,8 +1,31 @@
-import { useId, useState, useRef, useEffect } from "react"
+import { useId, useState, useRef, useEffect, type ChangeEvent, type FormEvent, type MouseEvent } from "react"
 import { Search, X } from "lucide-react"
 
-const useSearchForm = ({ idTechnology, idLocation, idExperienceLevel, idText, initialText, onSearch, onTextFilter }) => {
-  const timeoutId = useRef(null)
+/** Filtros del buscador: forma compartida con SearchPage (la URL manda). */
+export interface JobFilters {
+  technology: string
+  location: string
+  experienceLevel: string
+}
+
+/** FormData.get devuelve string | File | null; los selects siempre dan string. */
+function getFilterValue (formData: FormData, key: string): string {
+  const value = formData.get(key)
+  return value instanceof File ? "" : (value ?? "")
+}
+
+interface UseSearchFormParams {
+  idTechnology: string
+  idLocation: string
+  idExperienceLevel: string
+  idText: string
+  initialText: string
+  onSearch: (filters: JobFilters) => void
+  onTextFilter: (text: string) => void
+}
+
+const useSearchForm = ({ idTechnology, idLocation, idExperienceLevel, idText, initialText, onSearch, onTextFilter }: UseSearchFormParams) => {
+  const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [searchText, setSearchText] = useState(initialText ?? "")
 
   // La URL manda (atrás/adelante): refleja el texto en el estado
@@ -10,25 +33,26 @@ const useSearchForm = ({ idTechnology, idLocation, idExperienceLevel, idText, in
     setSearchText(initialText ?? "")
   }, [initialText])
 
-  const handleSubmit = (event) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    
+
     const formData = new FormData(event.currentTarget)
-    
-    if (event.target.name === idText) {
+
+    // El target es el elemento que cambió (el input de texto, no el form)
+    if (event.target instanceof HTMLInputElement && event.target.name === idText) {
       return // ya lo manejamos en onChange
     }
 
-    const filters = {
-      technology: formData.get(idTechnology),
-      location: formData.get(idLocation),
-      experienceLevel: formData.get(idExperienceLevel)
+    const filters: JobFilters = {
+      technology: getFilterValue(formData, idTechnology),
+      location: getFilterValue(formData, idLocation),
+      experienceLevel: getFilterValue(formData, idExperienceLevel)
     }
 
     onSearch(filters)
   }
 
-  const handleTextChange = (event) => {
+  const handleTextChange = (event: ChangeEvent<HTMLInputElement>) => {
     const text = event.target.value
     setSearchText(text) // actualizamos el input inmediatamente
 
@@ -57,13 +81,20 @@ const useSearchForm = ({ idTechnology, idLocation, idExperienceLevel, idText, in
   }
 }
 
-export function SearchFormSection ({ initialFilters, onTextFilter, onSearch, initialText }) {
+interface SearchFormSectionProps {
+  initialFilters: JobFilters
+  onTextFilter: (text: string) => void
+  onSearch: (filters: JobFilters) => void
+  initialText: string
+}
+
+export function SearchFormSection ({ initialFilters, onTextFilter, onSearch, initialText }: SearchFormSectionProps) {
   const idText = useId()
   const idTechnology = useId()
   const idLocation = useId()
   const idExperienceLevel = useId()
 
-  const inputRef = useRef()
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // La URL manda (atrás/adelante): refleja el texto en el input no controlado
   useEffect(() => {
@@ -79,10 +110,12 @@ export function SearchFormSection ({ initialFilters, onTextFilter, onSearch, ini
     clearSearch
   } = useSearchForm({ idTechnology, idLocation, idExperienceLevel, idText, initialText, onSearch, onTextFilter })
 
-  const handleClearInput = (event) => {
+  const handleClearInput = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
 
-    inputRef.current.value = ""
+    if (inputRef.current) {
+      inputRef.current.value = ""
+    }
     clearSearch()
     onTextFilter("")
   }
