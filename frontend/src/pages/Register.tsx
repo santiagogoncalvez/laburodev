@@ -37,7 +37,7 @@ export default function Register() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
-            <label htmlFor="name" className={styles.label}>
+            <label htmlFor={nameId} className={styles.label}>
               Nombre completo
             </label>
             <input
@@ -64,7 +64,7 @@ export default function Register() {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="password" className={styles.label}>
+            <label htmlFor={passwordId} className={styles.label}>
               Contraseña
             </label>
             <input
