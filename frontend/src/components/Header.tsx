@@ -1,8 +1,8 @@
 import { NavLink } from 'react-router'
 import { Link } from './Link'
 import { ThemeToggle } from './ThemeToggle'
-import { useAuthStore } from '../store/authStore'
-import { useFavoritesStore } from '../store/favoritesStore'
+import { useAuthStore } from '@/store/authStore'
+import { useFavoritesStore } from '@/store/favoritesStore'
 
 export function Header () {
   // Selectores por valor: re-render solo cuando cambia lo que se usa en render

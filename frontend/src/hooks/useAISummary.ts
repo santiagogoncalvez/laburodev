@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { API_URL } from "../config";
+import { API_URL } from "@/config";
 
 export function useAISummary(jobId: string) {
   const [summary, setSummary] = useState("");

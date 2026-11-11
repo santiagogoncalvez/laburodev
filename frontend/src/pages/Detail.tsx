@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router"
 import { Building2, Heart, MapPin, Signal } from "lucide-react"
-import { JobDetailSkeleton } from "../components/JobDetailSkeleton"
-import { formatJobLevel } from "../constants/levels"
-import { API_URL } from "../config"
-import { Link } from "../components/Link"
+import { JobDetailSkeleton } from "@/components/JobDetailSkeleton"
+import { formatJobLevel } from "@/constants/levels"
+import { API_URL } from "@/config"
+import { Link } from "@/components/Link"
 import snarkdown from 'snarkdown'
 import DOMPurify from 'dompurify'
 import styles from './Detail.module.css'
-import { useFavoritesStore } from "../store/favoritesStore"
-import { AISummary } from "../components/AISummary"
-import type { Job } from "../types/api"
+import { useFavoritesStore } from "@/store/favoritesStore"
+import { AISummary } from "@/components/AISummary"
+import type { Job } from "@/types/api"
 
 interface JobSectionProps {
   title: string

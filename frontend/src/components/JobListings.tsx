@@ -1,5 +1,5 @@
 import { JobCard } from './JobCard'
-import type { Job } from '../types/api'
+import type { Job } from '@/types/api'
 
 interface JobListingsProps {
   jobs: Job[]

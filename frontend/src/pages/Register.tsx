@@ -1,7 +1,7 @@
 import { useId, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import styles from './Auth.module.css'
-import { useAuthStore } from '../store/authStore'
+import { useAuthStore } from '@/store/authStore'
 
 export default function Register() {
   const nameId = useId()

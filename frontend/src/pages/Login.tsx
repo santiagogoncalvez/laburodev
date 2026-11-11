@@ -1,6 +1,6 @@
 import { useId, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { useAuthStore } from '../store/authStore'
+import { useAuthStore } from '@/store/authStore'
 import styles from './Auth.module.css'
 
 export default function Login() {

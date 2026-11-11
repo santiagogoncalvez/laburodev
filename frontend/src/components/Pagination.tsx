@@ -1,6 +1,6 @@
 import type { CSSProperties, MouseEvent } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { getVisiblePages } from '../lib/pagination'
+import { getVisiblePages } from '@/lib/pagination'
 import styles from './Pagination.module.css'
 
 interface PaginationProps {

@@ -1,5 +1,5 @@
 import { User } from 'lucide-react'
-import { useAuthStore } from '../store/authStore'
+import { useAuthStore } from '@/store/authStore'
 import styles from './ProfilePage.module.css'
 
 export default function Profile() {

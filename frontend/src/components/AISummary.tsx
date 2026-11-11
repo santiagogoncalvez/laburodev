@@ -1,6 +1,6 @@
 import { Sparkles, Loader2, AlertCircle } from "lucide-react";
 import { Streamdown } from "streamdown";
-import { useAISummary } from "../hooks/useAISummary";
+import { useAISummary } from "@/hooks/useAISummary";
 import styles from "./AISummary.module.css";
 
 interface AISummaryProps {

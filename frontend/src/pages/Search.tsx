@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
-import { Pagination } from '../components/Pagination'
-import { SearchFormSection, type JobFilters } from '../components/SearchFormSection'
-import { JobListings } from '../components/JobListings'
-import { SearchResultsSkeleton } from '../components/SearchResultsSkeleton'
-import { Skeleton } from '../components/Skeleton'
-import { API_URL } from '../config'
+import { Pagination } from '@/components/Pagination'
+import { SearchFormSection, type JobFilters } from '@/components/SearchFormSection'
+import { JobListings } from '@/components/JobListings'
+import { SearchResultsSkeleton } from '@/components/SearchResultsSkeleton'
+import { Skeleton } from '@/components/Skeleton'
+import { API_URL } from '@/config'
 import styles from './Search.module.css'
-import type { Job, PaginatedJobsResponse } from '../types/api'
+import type { Job, PaginatedJobsResponse } from '@/types/api'
 
 const RESULTS_PER_PAGE = 10
 

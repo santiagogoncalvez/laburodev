@@ -1,9 +1,9 @@
 import { Building2, Heart, MapPin, Signal, Wifi, Home } from "lucide-react";
 import { Link } from "./Link";
-import { formatJobLevel } from "../constants/levels";
+import { formatJobLevel } from "@/constants/levels";
 import styles from "./JobCard.module.css";
-import { useFavoritesStore } from "../store/favoritesStore";
-import type { Job } from "../types/api";
+import { useFavoritesStore } from "@/store/favoritesStore";
+import type { Job } from "@/types/api";
 
 interface JobCardFavoriteButtonProps {
    jobId: string;
