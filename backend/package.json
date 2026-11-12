@@ -8,6 +8,7 @@
     "dev": "tsx watch app.ts",
     "build": "tsc && tsc-alias",
     "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
     "test": "node --import tsx --test",
     "db:seed": "tsx db/seed.ts",
     "db:reset": "tsx db/seed.ts --reset"

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
-    "lint": "eslint .",
+    "lint": "biome check .",
     "preview": "vite preview",
     "test:ai": "node ai-e2e/test-laburodev.js"
   },
@@ -24,16 +24,11 @@
   },
   "devDependencies": {
     "@browserbasehq/stagehand": "^4.4.0",
-    "@eslint/js": "^9.36.0",
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.5",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react-swc": "^4.1.0",
-    "eslint": "^9.36.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.22",
-    "globals": "^16.4.0",
     "playwright": "^1.65.0",
     "typescript": "^7.0.2",
     "vite": "^7.1.7"

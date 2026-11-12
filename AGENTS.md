@@ -20,6 +20,7 @@ npm start              # node dist/app.js (requiere npm run build antes)
 npm run dev            # tsx watch app.ts (recarga en vivo)
 npm run build          # tsc → dist/
 npm run typecheck      # tsc --noEmit (chequeo sin emitir)
+npm run lint           # biome check . (Biome — config única en biome.json de la raíz)
 npm test               # node --import tsx --test (corre TODOS los *.test.js; tsx resuelve los .ts) — ver gotcha abajo
 npm run db:seed        # tsx db/seed.ts — crea esquema + importa jobs.json (correr antes que los tests si la DB está vacía)
 npm run db:reset       # dropea la tabla y vuelve a seedear
@@ -33,7 +34,7 @@ docker exec <contenedor> npm run db:seed   # seed adentro del contenedor (la DB 
 # Frontend (desde laburodev/frontend/)
 npm run dev            # :5173
 npm run build          # build de producción
-npm run lint           # eslint . (ver estado abajo)
+npm run lint           # biome check . (Biome — config única en biome.json de la raíz)
 npm run test:ai        # tests con agente Stagehand (ver abajo)
 npx playwright test    # e2e/ — no hay script npm; webServer está comentado en playwright.config.js
 ```
@@ -56,7 +57,7 @@ En PowerShell usar `npm.cmd` si la policy de ejecución bloquea `npm` (falla con
 - **Login/register/profile son mock local con Zustand** — no hay backend de auth; no intentar conectarlos.
 - Rutas: `/`, `/search`, `/jobs/:jobId`, `/login`, `/register`, `/profile`.
 - Diseño: leer `frontend/DESIGN-SYSTEM.md` antes de tocar UI (tokens, Bricolage Grotesque 400/500, lucide-react, cero emoji).
-- `npm run lint` **hoy falla de forma preexistente**: `ai-e2e/*.js` y `playwright.config.js` usan `process` pero la config de eslint solo declara globals de browser, más 1 warning en `Detail.jsx`. No es regresión tuya. CI no corre lint (solo build).
+- **Lint con Biome 2.6** (config única en `biome.json` de la raíz; ESLint fue reemplazado): cubre `frontend/src/**` y `backend/**/*.ts` (los `.js` de `ai-e2e/` y configs quedan fuera de scope). Convenciones: frontend comillas simples, backend comillas dobles (override en config), indent de 2 espacios, orden de imports activo (`assist`). `npm run lint` funciona desde frontend o backend (resuelve el binario de la raíz). `typescript-eslint` no se usa porque TS7 todavía no expone API programática (typescript-eslint#10940). CI no corre lint (solo build).
 - `@swc/core` en Windows: si reinstalar falla con *"Failed to load native binding"* (permisos DACL del perfil), forzar `@swc/core` a `1.13.5` con `overrides` en `frontend/package.json`.
 
 ## IA — Resumen de empleos (`/ai/summary/:id`)
