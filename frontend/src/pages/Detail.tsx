@@ -16,6 +16,7 @@ import { JobDetailSkeleton } from '@/components/JobDetailSkeleton';
 import { Link } from '@/components/Link';
 import { API_URL } from '@/config';
 import { formatJobLevel } from '@/constants/levels';
+import { formatTechnology } from '@/constants/technologies';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import type { Job } from '@/types/api';
 import styles from './Detail.module.css';
@@ -105,7 +106,7 @@ function DetailPageHeader({ job }: DetailPageHeaderProps) {
         <div className="badges">
           {job.data.technology.map((technology) => (
             <span key={technology} className="badge">
-              {technology}
+              {formatTechnology(technology)}
             </span>
           ))}
         </div>

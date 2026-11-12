@@ -1,5 +1,6 @@
 import { Building2, Heart, Home, MapPin, Signal, Wifi } from 'lucide-react';
 import { formatJobLevel } from '@/constants/levels';
+import { formatTechnology } from '@/constants/technologies';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import type { Job } from '@/types/api';
 import styles from './JobCard.module.css';
@@ -72,7 +73,7 @@ export function JobCard({ job }: JobCardProps) {
         <div className="badges">
           {techList(job).map((t) => (
             <span key={t} className="badge">
-              {t}
+              {formatTechnology(t)}
             </span>
           ))}
         </div>

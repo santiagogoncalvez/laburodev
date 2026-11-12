@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { API_URL } from '@/config';
 import { JOB_LEVELS } from '@/constants/levels';
+import { formatTechnology } from '@/constants/technologies';
 
 /** Valores de los selects que vienen de GET /jobs/options (DB real). */
 interface FilterOptions {
@@ -232,7 +233,7 @@ export function SearchFormSection({
             <option value="">Tecnología</option>
             {filterOptions.technologies.map((technology) => (
               <option key={technology} value={technology}>
-                {technology}
+                {formatTechnology(technology)}
               </option>
             ))}
           </select>
