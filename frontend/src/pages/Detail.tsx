@@ -1,5 +1,13 @@
 import DOMPurify from 'dompurify';
-import { Building2, Heart, MapPin, Signal } from 'lucide-react';
+import {
+  Building2,
+  CalendarDays,
+  Heart,
+  Home,
+  MapPin,
+  Signal,
+  Wifi,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import snarkdown from 'snarkdown';
@@ -75,10 +83,33 @@ function DetailPageHeader({ job }: DetailPageHeaderProps) {
           {job.location}
         </span>
         <span className="meta-item">
+          {job.data.modality === 'remoto' ? (
+            <Wifi size={14} aria-hidden="true" />
+          ) : (
+            <Home size={14} aria-hidden="true" />
+          )}
+          {job.data.modality === 'remoto' ? 'Remoto' : 'Presencial'}
+        </span>
+        <span className="meta-item">
           <Signal size={14} aria-hidden="true" />
           {formatJobLevel(job.data.level)}
         </span>
+        {job.createdAt && (
+          <span className="meta-item">
+            <CalendarDays size={14} aria-hidden="true" />
+            Publicado: {new Date(job.createdAt).toLocaleDateString('es-AR')}
+          </span>
+        )}
       </div>
+      {job.data.technology.length > 0 && (
+        <div className="badges">
+          {job.data.technology.map((technology) => (
+            <span key={technology} className="badge">
+              {technology}
+            </span>
+          ))}
+        </div>
+      )}
     </header>
   );
 }
@@ -194,7 +225,7 @@ export default function JobDetail() {
         content={job.content.responsibilities.join('\n')}
       />
       <JobSection
-        title="Requisitios"
+        title="Requisitos"
         content={job.content.requirements.join('\n')}
       />
       <JobSection title="Acerca de la empresa" content={job.content.about} />
