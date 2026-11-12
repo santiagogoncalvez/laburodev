@@ -159,6 +159,35 @@ describe("GET /jobs filtros y paginación", () => {
    });
 });
 
+describe("GET /jobs/options", () => {
+   test("debe devolver tecnologías, ubicaciones y niveles distintos", async () => {
+      const response = await fetch(`${BASE_URL}/jobs/options`);
+      assert.strictEqual(response.status, 200);
+
+      const options = await response.json();
+      assert.ok(Array.isArray(options.technologies) && options.technologies.length > 0, "tecnologías");
+      assert.ok(Array.isArray(options.locations) && options.locations.length > 0, "ubicaciones");
+      assert.ok(Array.isArray(options.levels) && options.levels.includes("senior"), "niveles");
+      assert.strictEqual(new Set(options.locations).size, options.locations.length, "sin duplicados");
+   });
+});
+
+describe("Filtros exactos", () => {
+   test("technology=java no debe devolver javascript", async () => {
+      const java = await (await fetch(`${BASE_URL}/jobs?technology=java&limit=50`)).json();
+      assert.ok(java.data.every((job) => job.data.technology.includes("java")), "solo tecnología exacta");
+
+      const js = await (await fetch(`${BASE_URL}/jobs?technology=javascript&limit=50`)).json();
+      assert.ok(js.data.length > 0, "javascript sí debe devolver resultados");
+   });
+
+   test("location=Remoto solo debe devolver Remoto", async () => {
+      const json = await (await fetch(`${BASE_URL}/jobs?location=Remoto&limit=50`)).json();
+      assert.ok(json.data.length > 0, "Remoto debe devolver resultados");
+      assert.ok(json.data.every((job) => job.location === "Remoto"));
+   });
+});
+
 describe("POST /jobs", () => {
    test("debe crear con 201 y devolver el trabajo", async () => {
       const body = {
@@ -208,6 +237,14 @@ describe("PUT /jobs/:id", () => {
       });
       const job = await res.json();
       putId = job.id;
+   });
+
+   after(async () => {
+      // Limpieza: no dejar filas de test en la DB local
+      await fetch(`${BASE_URL}/jobs/${putId}`, {
+         method: "DELETE",
+         headers: { ...writeHeaders },
+      });
    });
 
    test("debe reemplazar con 200", async () => {
@@ -272,6 +309,14 @@ describe("PATCH /jobs/:id", () => {
       });
       const job = await res.json();
       patchId = job.id;
+   });
+
+   after(async () => {
+      // Limpieza: no dejar filas de test en la DB local
+      await fetch(`${BASE_URL}/jobs/${patchId}`, {
+         method: "DELETE",
+         headers: { ...writeHeaders },
+      });
    });
 
    test("debe actualizar solo lo enviado", async () => {
