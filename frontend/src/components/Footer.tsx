@@ -1,4 +1,4 @@
-export function Footer () {
+export function Footer() {
   const year = new Date().getFullYear();
   return (
     <footer>
@@ -6,5 +6,5 @@ export function Footer () {
         <small>&copy; {year} laburoDev. Todos los derechos reservados.</small>
       </div>
     </footer>
-  )
+  );
 }

@@ -1,30 +1,34 @@
-import { type FormEvent } from "react"
-import { useRouter } from "@/hooks/useRouter"
-import { Search } from "lucide-react"
-import styles from "./Home.module.css"
+import { Search } from 'lucide-react';
+import type { FormEvent } from 'react';
+import { useRouter } from '@/hooks/useRouter';
+import styles from './Home.module.css';
 
-export default function HomePage () {
-  const { navigateTo } = useRouter()
+export default function HomePage() {
+  const { navigateTo } = useRouter();
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const formData = new FormData(event.currentTarget)
-    const searchTerm = formData.get('search')
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const searchTerm = formData.get('search');
 
-    const url = typeof searchTerm === "string" && searchTerm
-      ? `/search?text=${encodeURIComponent(searchTerm)}`
-      : '/search'
+    const url =
+      typeof searchTerm === 'string' && searchTerm
+        ? `/search?text=${encodeURIComponent(searchTerm)}`
+        : '/search';
 
-    navigateTo(url)
-  }
+    navigateTo(url);
+  };
 
   return (
     <main>
       <title>laburoDev · Empleos para desarrolladores</title>
       <section className="jobs-search">
         <h1>Encontrá el trabajo que buscás</h1>
-        <p>La comunidad de desarrolladores donde están las mejores oportunidades.</p>
+        <p>
+          La comunidad de desarrolladores donde están las mejores oportunidades.
+        </p>
 
+        {/* biome-ignore lint/a11y/useSemanticElements: role=search en <form> es el patron ARIA vigente; usar <search> romperia el submit del formulario */}
         <form role="search" onSubmit={handleSearch}>
           <div className="search-bar">
             <Search size={20} aria-hidden="true" />
@@ -36,7 +40,9 @@ export default function HomePage () {
               placeholder="Buscar empleos por título, habilidad o empresa"
             />
 
-            <button className="btn btn-primary" type="submit">Buscar</button>
+            <button className="btn btn-primary" type="submit">
+              Buscar
+            </button>
           </div>
         </form>
       </section>
@@ -44,27 +50,34 @@ export default function HomePage () {
       <section className={styles.section}>
         <header>
           <h2>¿Por qué laburoDev?</h2>
-          <p>Conectamos a los mejores talentos con las empresas más innovadoras.</p>
+          <p>
+            Conectamos a los mejores talentos con las empresas más innovadoras.
+          </p>
         </header>
 
         <div className={styles.rows}>
           <article className={styles.row}>
             <h3>Encontrá el trabajo de tus sueños</h3>
-            <p>Busca miles de empleos de las mejores empresas de todo el mundo.</p>
+            <p>
+              Busca miles de empleos de las mejores empresas de todo el mundo.
+            </p>
           </article>
 
           <article className={styles.row}>
             <h3>Conecta con las mejores empresas</h3>
-            <p>Conecta con empresas que están contratando por tus habilidades.</p>
+            <p>
+              Conecta con empresas que están contratando por tus habilidades.
+            </p>
           </article>
 
           <article className={styles.row}>
             <h3>Obtén el salario que mereces</h3>
-            <p>Obtén el salario que mereces con nuestra calculadora de salarios.</p>
+            <p>
+              Obtén el salario que mereces con nuestra calculadora de salarios.
+            </p>
           </article>
         </div>
-
       </section>
     </main>
-  )
+  );
 }

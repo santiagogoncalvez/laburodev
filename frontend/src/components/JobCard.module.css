@@ -1,33 +1,33 @@
 .title {
-  text-decoration: none;
-  color: var(--text);
-  font-size: var(--fs-h3);
-  font-weight: 500;
+	text-decoration: none;
+	color: var(--text);
+	font-size: var(--fs-h3);
+	font-weight: 500;
 }
 
 .title:hover {
-  color: var(--text);
-  text-decoration: underline;
+	color: var(--text);
+	text-decoration: underline;
 }
 
 /* La card entera es link: el título estira su área a toda la card.
    .actions queda por encima para que el fav no quede anidado. */
 .title::after {
-  content: "";
-  position: absolute;
-  inset: 0;
+	content: "";
+	position: absolute;
+	inset: 0;
 }
 
 .actions {
-  display: flex;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
+	display: flex;
+	flex-shrink: 0;
+	position: relative;
+	z-index: 1;
 }
 
 .createdAt {
-  display: block;
-  margin-top: var(--space-2);
-  font-size: var(--fs-small);
-  color: var(--text-2);
+	display: block;
+	margin-top: var(--space-2);
+	font-size: var(--fs-small);
+	color: var(--text-2);
 }

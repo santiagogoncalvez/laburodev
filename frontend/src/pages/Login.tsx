@@ -1,27 +1,27 @@
-import { useId, type FormEvent } from 'react'
-import { useNavigate } from 'react-router'
-import { useAuthStore } from '@/store/authStore'
-import styles from './Auth.module.css'
+import { type FormEvent, useId } from 'react';
+import { useNavigate } from 'react-router';
+import { useAuthStore } from '@/store/authStore';
+import styles from './Auth.module.css';
 
 export default function Login() {
-  const { login } = useAuthStore()
-  const navigate = useNavigate()
-  const passwordId = useId()
-  const emailId = useId()
+  const { login } = useAuthStore();
+  const navigate = useNavigate();
+  const passwordId = useId();
+  const emailId = useId();
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const formData = new FormData(e.currentTarget)
-    const email = formData.get(emailId)
-    const password = formData.get(passwordId)
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get(emailId);
+    const password = formData.get(passwordId);
 
     // Mock login - en una app real, harías una petición a la API
     if (email && password) {
-      login()
-      navigate('/search')
+      login();
+      navigate('/search');
     }
-  }
+  };
 
   return (
     <div className={styles.container}>
@@ -74,5 +74,5 @@ export default function Login() {
         </p>
       </div>
     </div>
-  )
+  );
 }

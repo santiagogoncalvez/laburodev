@@ -1,12 +1,18 @@
-import { User } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
-import styles from './ProfilePage.module.css'
+import { User } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import styles from './ProfilePage.module.css';
 
 export default function Profile() {
-  const { logout } = useAuthStore()
+  const { logout } = useAuthStore();
 
   return (
-    <div style={{ maxWidth: '44rem', margin: '0 auto', padding: 'var(--space-5) var(--gutter)' }}>
+    <div
+      style={{
+        maxWidth: '44rem',
+        margin: '0 auto',
+        padding: 'var(--space-5) var(--gutter)',
+      }}
+    >
       <title>Perfil · laburoDev</title>
       <div className={styles.container}>
         <div className={styles.header}>
@@ -43,14 +49,18 @@ export default function Profile() {
           <h2 className={styles.sectionTitle}>Experiencia</h2>
           <div className={styles.experienceItem}>
             <h3 className={styles.experienceTitle}>Desarrollador Frontend</h3>
-            <p className={styles.experienceCompany}>Empresa XYZ • 2021 - Presente</p>
+            <p className={styles.experienceCompany}>
+              Empresa XYZ • 2021 - Presente
+            </p>
             <p className={styles.experienceDescription}>
               Desarrollo de aplicaciones web con React, TypeScript y Next.js
             </p>
           </div>
           <div className={styles.experienceItem}>
             <h3 className={styles.experienceTitle}>Desarrollador Junior</h3>
-            <p className={styles.experienceCompany}>Startup ABC • 2019 - 2021</p>
+            <p className={styles.experienceCompany}>
+              Startup ABC • 2019 - 2021
+            </p>
             <p className={styles.experienceDescription}>
               Mantenimiento y desarrollo de features en aplicaciones legacy
             </p>
@@ -72,14 +82,18 @@ export default function Profile() {
         </div>
 
         <div className={styles.actions}>
-          <button className={styles.editButton}>
+          <button type="button" className={styles.editButton}>
             Editar Perfil
           </button>
-          <button className={styles.logoutButton} onClick={logout}>
+          <button
+            type="button"
+            className={styles.logoutButton}
+            onClick={logout}
+          >
             Cerrar Sesión
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }

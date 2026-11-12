@@ -1,9 +1,9 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties } from 'react';
 
 interface SkeletonProps {
-   style?: CSSProperties;
+  style?: CSSProperties;
 }
 
 export function Skeleton({ style }: SkeletonProps) {
-   return <div className="skeleton" style={style} aria-hidden="true" />;
+  return <div className="skeleton" style={style} aria-hidden="true" />;
 }

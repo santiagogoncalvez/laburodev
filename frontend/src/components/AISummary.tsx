@@ -1,7 +1,7 @@
-import { Sparkles, Loader2, AlertCircle } from "lucide-react";
-import { Streamdown } from "streamdown";
-import { useAISummary } from "@/hooks/useAISummary";
-import styles from "./AISummary.module.css";
+import { AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { Streamdown } from 'streamdown';
+import { useAISummary } from '@/hooks/useAISummary';
+import styles from './AISummary.module.css';
 
 interface AISummaryProps {
   jobId: string;
@@ -20,11 +20,12 @@ function AISummary({ jobId }: AISummaryProps) {
             <p>{error}</p>
           </div>
           <button
+            type="button"
             onClick={generateSummary}
             disabled={loading}
             className={styles.retry}
           >
-            {loading ? "Reintentando..." : "Reintentar"}
+            {loading ? 'Reintentando...' : 'Reintentar'}
           </button>
         </div>
       </section>
@@ -40,6 +41,7 @@ function AISummary({ jobId }: AISummaryProps) {
             Resumen generado por IA
           </h2>
           <button
+            type="button"
             onClick={generateSummary}
             disabled={loading}
             className={styles.regenerate}
@@ -69,6 +71,7 @@ function AISummary({ jobId }: AISummaryProps) {
   return (
     <section className={styles.section}>
       <button
+        type="button"
         onClick={generateSummary}
         disabled={loading}
         className={styles.generate}

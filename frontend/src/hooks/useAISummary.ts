@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { API_URL } from "@/config";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { API_URL } from '@/config';
 
 export function useAISummary(jobId: string) {
-  const [summary, setSummary] = useState("");
+  const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,8 +13,9 @@ export function useAISummary(jobId: string) {
 
   // PENDING_FIXES [useAISummary]: abort del stream en cleanup + reinicio al
   // cambiar de jobId (el resumen viejo no debe verse en el empleo nuevo)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: jobId es el trigger intencional del reset
   useEffect(() => {
-    setSummary("");
+    setSummary('');
     setError(null);
     setLoading(false);
 
@@ -43,19 +44,19 @@ export function useAISummary(jobId: string) {
         // errData como unknown + narrowing explícito (sin `as`, sin any).
         const errData: unknown = await response.json().catch(() => undefined);
         const apiMessage =
-          typeof errData === "object" &&
+          typeof errData === 'object' &&
           errData !== null &&
-          "error" in errData &&
-          typeof errData.error === "string"
+          'error' in errData &&
+          typeof errData.error === 'string'
             ? errData.error
             : undefined;
-        throw new Error(apiMessage ?? "Error generando el resumen");
+        throw new Error(apiMessage ?? 'Error generando el resumen');
       }
 
       // body es ReadableStream | null en los tipos: guard explícito (sin `!`).
       const body = response.body;
       if (!body) {
-        throw new Error("La respuesta no incluye stream de contenido");
+        throw new Error('La respuesta no incluye stream de contenido');
       }
 
       const reader = body.getReader();

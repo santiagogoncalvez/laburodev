@@ -7,44 +7,44 @@
 
 /** Sección `data` de un empleo en la respuesta de la API. */
 export interface JobData {
-   level: string;
-   modality: string;
-   technology: string[];
+  level: string;
+  modality: string;
+  technology: string[];
 }
 
 /** Sección `content` de un empleo en la respuesta de la API. */
 export interface JobContent {
-   description: string;
-   responsibilities: string[];
-   requirements: string[];
-   about: string;
+  description: string;
+  responsibilities: string[];
+  requirements: string[];
+  about: string;
 }
 
 /** Empleo en la respuesta de la API. */
 export interface Job {
-   id: string;
-   title: string;
-   company: string;
-   location: string;
-   createdAt: string | null;
-   data: JobData;
-   content: JobContent;
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  createdAt: string | null;
+  data: JobData;
+  content: JobContent;
 }
 
 /** Respuesta paginada de GET /jobs. */
 export interface PaginatedJobsResponse {
-   data: Job[];
-   total: number;
-   limit: number;
-   offset: number;
+  data: Job[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 /** Query params que acepta GET /jobs (la visión del frontend de los filtros). */
 export interface JobsQueryParams {
-   limit?: number;
-   offset?: number;
-   search?: string;
-   level?: string;
-   technology?: string;
-   modality?: string;
+  limit?: number;
+  offset?: number;
+  search?: string;
+  level?: string;
+  technology?: string;
+  modality?: string;
 }

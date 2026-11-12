@@ -1,12 +1,12 @@
-import { create } from 'zustand'
+import { create } from 'zustand';
 
 interface AuthState {
   // Estado
-  isLoggedIn: boolean
+  isLoggedIn: boolean;
 
   // Acciones
-  login: () => void
-  logout: () => void
+  login: () => void;
+  logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -15,5 +15,5 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   // Acciones
   login: () => set({ isLoggedIn: true }),
-  logout: () => set({ isLoggedIn: false})
-}))
+  logout: () => set({ isLoggedIn: false }),
+}));

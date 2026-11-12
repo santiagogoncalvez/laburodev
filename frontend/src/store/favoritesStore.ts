@@ -1,17 +1,17 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface FavoritesState {
   // Estado
-  favorites: string[]
+  favorites: string[];
 
   // Acciones
-  clearFavorites: () => void
-  addFavorite: (jobId: string) => void
-  removeFavorite: (jobId: string) => void
-  isFavorite: (jobId: string) => boolean
-  toggleFavorite: (jobId: string) => void
-  countFavorites: () => number
+  clearFavorites: () => void;
+  addFavorite: (jobId: string) => void;
+  removeFavorite: (jobId: string) => void;
+  isFavorite: (jobId: string) => boolean;
+  toggleFavorite: (jobId: string) => void;
+  countFavorites: () => number;
 }
 
 export const useFavoritesStore = create<FavoritesState>()(
@@ -21,7 +21,7 @@ export const useFavoritesStore = create<FavoritesState>()(
       favorites: [],
 
       clearFavorites: () => {
-        set({ favorites: [] })
+        set({ favorites: [] });
       },
 
       // Acciones
@@ -29,31 +29,31 @@ export const useFavoritesStore = create<FavoritesState>()(
         set((state) => ({
           favorites: state.favorites.includes(jobId)
             ? state.favorites
-            : [...state.favorites, jobId]
-        }))
+            : [...state.favorites, jobId],
+        }));
       },
 
       removeFavorite: (jobId) => {
         set((state) => ({
-          favorites: state.favorites.filter((id) => id !== jobId)
-        }))
+          favorites: state.favorites.filter((id) => id !== jobId),
+        }));
       },
 
       isFavorite: (jobId) => {
-        return get().favorites.includes(jobId)
+        return get().favorites.includes(jobId);
       },
 
       toggleFavorite: (jobId) => {
-        const { addFavorite, removeFavorite, isFavorite } = get()
-        const isFav = isFavorite(jobId)
-        isFav ? removeFavorite(jobId) : addFavorite(jobId)
+        const { addFavorite, removeFavorite, isFavorite } = get();
+        const isFav = isFavorite(jobId);
+        isFav ? removeFavorite(jobId) : addFavorite(jobId);
       },
 
-      countFavorites: () => get().favorites.length
+      countFavorites: () => get().favorites.length,
     }),
     {
       name: 'laburodev-favorites',
       partialize: (state) => ({ favorites: state.favorites }),
-    }
-  )
-)
+    },
+  ),
+);

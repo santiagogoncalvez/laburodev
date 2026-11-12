@@ -1,86 +1,86 @@
 .container {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-5);
-  padding: var(--space-6) var(--gutter);
-  max-width: var(--page);
-  width: 100%;
-  margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--space-5);
+	padding: var(--space-6) var(--gutter);
+	max-width: var(--page);
+	width: 100%;
+	margin: 0 auto;
 }
 
 .error {
-  padding-block: var(--space-7);
-  text-align: center;
+	padding-block: var(--space-7);
+	text-align: center;
 }
 
 .errorTitle {
-  font-size: var(--fs-h2);
-  font-weight: 500;
-  margin-bottom: 1rem;
+	font-size: var(--fs-h2);
+	font-weight: 500;
+	margin-bottom: 1rem;
 }
 
 .errorButton {
-  composes: btn btn-ghost from global;
+	composes: btn btn-ghost from global;
 }
 
 .breadcrumb {
-  font-size: var(--fs-small);
-  color: var(--text-2);
-  margin: 0;
-  padding: 0;
+	font-size: var(--fs-small);
+	color: var(--text-2);
+	margin: 0;
+	padding: 0;
 }
 
 .breadcrumbButton {
-  background: none;
-  border: none;
-  color: inherit;
-  cursor: pointer;
-  padding: 0;
-  font-size: inherit;
-  font-family: inherit;
-  text-decoration: none;
+	background: none;
+	border: none;
+	color: inherit;
+	cursor: pointer;
+	padding: 0;
+	font-size: inherit;
+	font-family: inherit;
+	text-decoration: none;
 }
 
 .breadcrumbButton:hover {
-  color: var(--text);
+	color: var(--text);
 }
 
 .breadcrumbSeparator {
-  margin: 0;
+	margin: 0;
 }
 
 .breadcrumbCurrent {
-  color: var(--text);
+	color: var(--text);
 }
 
 .header {
-  margin: 0;
+	margin: 0;
 }
 
 .titleRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-4);
 }
 
 .title {
-  font-size: var(--fs-h1);
-  font-weight: 500;
-  margin-bottom: var(--space-2);
+	font-size: var(--fs-h1);
+	font-weight: 500;
+	margin-bottom: var(--space-2);
 }
 
 .section {
-  margin: 0;
+	margin: 0;
 }
 
 .sectionTitle {
-  font-size: var(--fs-h3);
-  font-weight: 500;
-  margin-bottom: var(--space-3);
+	font-size: var(--fs-h3);
+	font-weight: 500;
+	margin-bottom: var(--space-3);
 }
 
 .sectionContent {
-  color: var(--text-2);
+	color: var(--text-2);
 }

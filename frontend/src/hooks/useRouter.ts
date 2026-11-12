@@ -1,15 +1,15 @@
-import { useNavigate, useLocation } from 'react-router'
+import { useLocation, useNavigate } from 'react-router';
 
 export function useRouter() {
-  const navigate = useNavigate()
-  const location = useLocation()
+  const navigate = useNavigate();
+  const location = useLocation();
 
   function navigateTo(path: string): void {
-    navigate(path)
+    navigate(path);
   }
 
   return {
     currentPath: location.pathname,
-    navigateTo
-  }
+    navigateTo,
+  };
 }

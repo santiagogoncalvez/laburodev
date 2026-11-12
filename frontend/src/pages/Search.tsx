@@ -1,137 +1,161 @@
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
+import { JobListings } from '@/components/JobListings';
+import { Pagination } from '@/components/Pagination';
+import {
+  type JobFilters,
+  SearchFormSection,
+} from '@/components/SearchFormSection';
+import { SearchResultsSkeleton } from '@/components/SearchResultsSkeleton';
+import { Skeleton } from '@/components/Skeleton';
+import { API_URL } from '@/config';
+import type { Job, PaginatedJobsResponse } from '@/types/api';
+import styles from './Search.module.css';
 
-import { Pagination } from '@/components/Pagination'
-import { SearchFormSection, type JobFilters } from '@/components/SearchFormSection'
-import { JobListings } from '@/components/JobListings'
-import { SearchResultsSkeleton } from '@/components/SearchResultsSkeleton'
-import { Skeleton } from '@/components/Skeleton'
-import { API_URL } from '@/config'
-import styles from './Search.module.css'
-import type { Job, PaginatedJobsResponse } from '@/types/api'
+const RESULTS_PER_PAGE = 10;
 
-const RESULTS_PER_PAGE = 10
+// Pura (solo usa su argumento): vive a nivel de módulo para que el efecto de
+// lectura de la URL no dependa de identidades que cambian en cada render.
+const readFromParams = (sp: URLSearchParams) => {
+  const page = Number(sp.get('page'));
+  return {
+    filters: {
+      technology: sp.get('technology') || '',
+      location: sp.get('type') || '',
+      experienceLevel: sp.get('level') || '',
+    },
+    text: sp.get('text') || '',
+    page: Number.isInteger(page) && page > 0 ? page : 1,
+  };
+};
 
 const useFilters = () => {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const readFromParams = (sp: URLSearchParams) => {
-    const page = Number(sp.get('page'))
-    return {
-      filters: {
-        technology: sp.get('technology') || '',
-        location: sp.get('type') || '',
-        experienceLevel: sp.get('level') || ''
-      },
-      text: sp.get('text') || '',
-      page: Number.isInteger(page) && page > 0 ? page : 1
-    }
-  }
+  const [filters, setFilters] = useState<JobFilters>(
+    () => readFromParams(searchParams).filters,
+  );
 
-  const [filters, setFilters] = useState<JobFilters>(() => readFromParams(searchParams).filters)
+  const [textToFilter, setTextToFilter] = useState(
+    () => readFromParams(searchParams).text,
+  );
 
-  const [textToFilter, setTextToFilter] = useState(() => readFromParams(searchParams).text)
+  const [currentPage, setCurrentPage] = useState(
+    () => readFromParams(searchParams).page,
+  );
 
-  const [currentPage, setCurrentPage] = useState(() => readFromParams(searchParams).page)
-
-  const [jobs, setJobs] = useState<Job[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchJobs() {
       try {
-        setLoading(true)
+        setLoading(true);
 
-        const params = new URLSearchParams()
-        if (textToFilter) params.append('text', textToFilter)
-        if (filters.technology) params.append('technology', filters.technology)
-        if (filters.location) params.append('type', filters.location)
-        if (filters.experienceLevel) params.append('level', filters.experienceLevel)
+        const params = new URLSearchParams();
+        if (textToFilter) params.append('text', textToFilter);
+        if (filters.technology) params.append('technology', filters.technology);
+        if (filters.location) params.append('type', filters.location);
+        if (filters.experienceLevel)
+          params.append('level', filters.experienceLevel);
 
-        const offset = (currentPage - 1) * RESULTS_PER_PAGE
-        params.append('limit', String(RESULTS_PER_PAGE))
-        params.append('offset', String(offset))
+        const offset = (currentPage - 1) * RESULTS_PER_PAGE;
+        params.append('limit', String(RESULTS_PER_PAGE));
+        params.append('offset', String(offset));
 
-        const queryParams = params.toString()
+        const queryParams = params.toString();
 
-        const response = await fetch(
-           `${API_URL}/jobs?${queryParams}`,
-        );
+        const response = await fetch(`${API_URL}/jobs?${queryParams}`);
 
         if (!response.ok) {
-          const errBody: { message?: string } = await response.json().catch(() => ({}))
-          throw new Error(errBody.message || `Error ${response.status}`)
+          const errBody: { message?: string } = await response
+            .json()
+            .catch(() => ({}));
+          throw new Error(errBody.message || `Error ${response.status}`);
         }
 
         // Defensivo: campos opcionales en el parseo, ver types/api.ts
-        const json: Partial<PaginatedJobsResponse> = await response.json()
+        const json: Partial<PaginatedJobsResponse> = await response.json();
 
-        setJobs(json.data ?? [])
-        setTotal(json.total ?? 0)
-        setError(null)
+        setJobs(json.data ?? []);
+        setTotal(json.total ?? 0);
+        setError(null);
       } catch {
-        setError('No se pudieron cargar los empleos. Revisá que la API esté corriendo.')
+        setError(
+          'No se pudieron cargar los empleos. Revisá que la API esté corriendo.',
+        );
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchJobs()
-  }, [filters, currentPage, textToFilter])
+    fetchJobs();
+  }, [filters, currentPage, textToFilter]);
 
   // Atrás/adelante del navegador: la URL manda, el estado la sigue.
   // Este efecto nunca escribe la URL, solo la lee: no hay ciclo posible.
   useEffect(() => {
-    const next = readFromParams(searchParams)
+    const next = readFromParams(searchParams);
 
-    setFilters((f) => (
+    setFilters((f) =>
       f.technology === next.filters.technology &&
       f.location === next.filters.location &&
       f.experienceLevel === next.filters.experienceLevel
-    ) ? f : next.filters)
-    setTextToFilter((t) => (t === next.text ? t : next.text))
-    setCurrentPage((p) => (p === next.page ? p : next.page))
-  }, [searchParams])
+        ? f
+        : next.filters,
+    );
+    setTextToFilter((t) => (t === next.text ? t : next.text));
+    setCurrentPage((p) => (p === next.page ? p : next.page));
+  }, [searchParams]);
 
   // La URL solo se escribe acá (acciones del usuario), nunca en efectos.
-  const writeParams = ({ text, filters, page }: { text: string; filters: JobFilters; page: number }) => {
-    const params = new URLSearchParams()
-    if (text) params.set('text', text)
-    if (filters.technology) params.set('technology', filters.technology)
-    if (filters.location) params.set('type', filters.location)
-    if (filters.experienceLevel) params.set('level', filters.experienceLevel)
+  const writeParams = ({
+    text,
+    filters,
+    page,
+  }: {
+    text: string;
+    filters: JobFilters;
+    page: number;
+  }) => {
+    const params = new URLSearchParams();
+    if (text) params.set('text', text);
+    if (filters.technology) params.set('technology', filters.technology);
+    if (filters.location) params.set('type', filters.location);
+    if (filters.experienceLevel) params.set('level', filters.experienceLevel);
 
-    if (page > 1) params.set('page', String(page))
+    if (page > 1) params.set('page', String(page));
 
-    return params
-  }
+    return params;
+  };
 
-  const totalPages = Math.ceil(total / RESULTS_PER_PAGE)
+  const totalPages = Math.ceil(total / RESULTS_PER_PAGE);
 
   const handlePageChange = (page: number) => {
-    setSearchParams(writeParams({ text: textToFilter, filters, page }))
+    setSearchParams(writeParams({ text: textToFilter, filters, page }));
     // Misma ruta (?page=): el reset general no dispara, el scroll va en la acción
-    window.scrollTo(0, 0)
-  }
+    window.scrollTo(0, 0);
+  };
 
   const handleSearch = (nextFilters: JobFilters) => {
-    setSearchParams(writeParams({ text: textToFilter, filters: nextFilters, page: 1 }))
-  }
+    setSearchParams(
+      writeParams({ text: textToFilter, filters: nextFilters, page: 1 }),
+    );
+  };
 
   const handleTextFilter = (newTextToFilter: string) => {
     // replace: tipear no llena el historial de entradas intermedias
-    setSearchParams(
-      writeParams({ text: newTextToFilter, filters, page: 1 }),
-      { replace: true }
-    )
-  }
+    setSearchParams(writeParams({ text: newTextToFilter, filters, page: 1 }), {
+      replace: true,
+    });
+  };
 
   // Mismo mecanismo que la cruz del buscador: limpia el texto vía URL
   const handleClearSearch = () => {
-    handleTextFilter("")
-  }
+    handleTextFilter('');
+  };
 
   return {
     filters,
@@ -145,9 +169,9 @@ const useFilters = () => {
     handlePageChange,
     handleSearch,
     handleTextFilter,
-    handleClearSearch
-  }
-}
+    handleClearSearch,
+  };
+};
 
 export default function SearchPage() {
   const {
@@ -162,17 +186,20 @@ export default function SearchPage() {
     handlePageChange,
     handleSearch,
     handleTextFilter,
-    handleClearSearch
-  } = useFilters()
+    handleClearSearch,
+  } = useFilters();
 
   const title = loading
     ? `Cargando... - laburoDev`
-    : `Resultados: ${total}, Página ${currentPage} - laburoDev`
+    : `Resultados: ${total}, Página ${currentPage} - laburoDev`;
 
   return (
     <main>
       <title>{title}</title>
-      <meta name="description" content="Explora miles de oportunidades laborales en el sector tecnológico. Encontrá tu próximo empleo en laburoDev." />
+      <meta
+        name="description"
+        content="Explora miles de oportunidades laborales en el sector tecnológico. Encontrá tu próximo empleo en laburoDev."
+      />
 
       <SearchFormSection
         initialText={textToFilter}
@@ -182,23 +209,36 @@ export default function SearchPage() {
       />
 
       <section className={styles.searchResults}>
-        {
-          loading
-            ? <>
-                <Skeleton style={{ width: "12rem", height: "1rem", marginBottom: "var(--space-4)" }} />
-                <SearchResultsSkeleton count={RESULTS_PER_PAGE} />
-              </>
-            : error
-              ? <p className="error-text">{error}</p>
-              : <>
-                  <p className={styles.resultCount}>{total} resultado{total === 1 ? '' : 's'} encontrado{total === 1 ? '' : 's'}</p>
-                  <JobListings jobs={jobs} onClear={handleClearSearch} />
-                </>
-        }
+        {loading ? (
+          <>
+            <Skeleton
+              style={{
+                width: '12rem',
+                height: '1rem',
+                marginBottom: 'var(--space-4)',
+              }}
+            />
+            <SearchResultsSkeleton count={RESULTS_PER_PAGE} />
+          </>
+        ) : error ? (
+          <p className="error-text">{error}</p>
+        ) : (
+          <>
+            <p className={styles.resultCount}>
+              {total} resultado{total === 1 ? '' : 's'} encontrado
+              {total === 1 ? '' : 's'}
+            </p>
+            <JobListings jobs={jobs} onClear={handleClearSearch} />
+          </>
+        )}
         {totalPages > 1 && (
-          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         )}
       </section>
     </main>
-  )
+  );
 }

@@ -1,28 +1,28 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
-const STORAGE_KEY = "laburodev-theme";
+const STORAGE_KEY = 'laburodev-theme';
 
-type Theme = "light" | "dark";
+type Theme = 'light' | 'dark';
 
 function initialTheme(): Theme {
-   const saved = localStorage.getItem(STORAGE_KEY);
-   if (saved === "light" || saved === "dark") return saved;
-   return window.matchMedia("(prefers-color-scheme: light)").matches
-      ? "light"
-      : "dark";
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === 'light' || saved === 'dark') return saved;
+  return window.matchMedia('(prefers-color-scheme: light)').matches
+    ? 'light'
+    : 'dark';
 }
 
 export function useTheme() {
-   const [theme, setTheme] = useState<Theme>(initialTheme);
+  const [theme, setTheme] = useState<Theme>(initialTheme);
 
-   useEffect(() => {
-      document.documentElement.dataset.theme = theme;
-      localStorage.setItem(STORAGE_KEY, theme);
-   }, [theme]);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem(STORAGE_KEY, theme);
+  }, [theme]);
 
-   const toggle = useCallback(() => {
-      setTheme((t) => (t === "dark" ? "light" : "dark"));
-   }, []);
+  const toggle = useCallback(() => {
+    setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+  }, []);
 
-   return { theme, toggle };
+  return { theme, toggle };
 }
