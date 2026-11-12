@@ -35,10 +35,14 @@ fase de estabilización posterior.
   rewrite) — los crawlers ven "200 OK" en páginas que no existen.
 - Tampoco hay meta `og:`/`twitter:` por página: los scrapers que **no
   ejecutan JS** (la mayoría de los que leen og:) solo ven el HTML inicial.
-- Fix futuro (solo si el SEO de URLs externas importa): prerender/SSG de
+- **Fix futuro (solo si el SEO de URLs externas importa): prerender/SSG de
   rutas o edge middleware en Vercel que responda 404 real + HTML prerendered.
 - Nota: títulos por página ✓ implementados en Grupo D (React 19 hoistea
   `<title>` a `<head>`), description global ✓ en `index.html`.
+- **✅ Resuelto** (2026-11-12): 404 real vía rewrites explícitos en
+  `vercel.json` + `404.html` (copia del shell de la SPA, plugin en
+  `vite.config.js`); `og:`/`twitter:` estáticos a nivel sitio en `index.html`.
+  Deferido: `og:` dinámico por empleo (requiere SSG/Edge).
 
 ## [useAISummary] Sin guard de concurrencia en `generateSummary`
 

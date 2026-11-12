@@ -116,6 +116,6 @@ Gotchas de Stagehand v4:
 
 Dos projects separados, uno por paquete (rootDirectory configurado en cada project de Vercel).
 
-- Frontend: `vercel.json` con rewrite SPA; `VITE_API_URL` en build.
+- Frontend: `vercel.json` con rewrites de las 6 rutas conocidas (rutas desconocidas → `404.html` con status 404 real: copia del shell de la SPA que genera un plugin en `vite.config.js`); `VITE_API_URL` en build.
 - API: `FRONTEND_URL` en runtime (URLs separadas por coma, tolera slash final) para CORS, más `PORT`.
 - Variables de entorno backend: `GOOGLE_GENERATIVE_AI_API_KEY`, `MODEL_AI`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` (ver `backend/.env.example`).

@@ -6,6 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>laburoDev · Empleos para desarrolladores</title>
   <meta name="description" content="laburoDev: buscá tu próximo trabajo como desarrollador. Miles de ofertas con filtros por tecnología, modalidad y nivel." />
+  <!-- OpenGraph/Twitter: estáticos a nivel sitio — el scraper no ejecuta JS.
+       Sin og:url (sería falso en rutas que no son la raíz; el scraper usa la
+       URL pedida) y sin og:image (no hay asset 1200×630; texto solo). -->
+  <meta property="og:title" content="laburoDev · Empleos para desarrolladores" />
+  <meta property="og:description" content="laburoDev: buscá tu próximo trabajo como desarrollador. Miles de ofertas con filtros por tecnología, modalidad y nivel." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="laburoDev" />
+  <meta property="og:locale" content="es_AR" />
+  <meta name="twitter:card" content="summary" />
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f6f0" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d1310" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%233e7d5c'/%3E%3Ctext x='32' y='43' font-family='sans-serif' font-size='30' font-weight='500' text-anchor='middle' fill='%23ece7d8'%3ElD%3C/text%3E%3C/svg%3E" />
