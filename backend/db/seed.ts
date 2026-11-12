@@ -3,20 +3,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { db } from "./index.js";
 
-// Países para reemplazar "Remoto" como ubicación
-const FALLBACK_LOCATIONS = [
-  "Argentina",
-  "México",
-  "Colombia",
-  "Perú",
-  "Chile",
-  "España",
-  "Uruguay",
-  "Paraguay",
-  "Ecuador",
-  "Brasil",
-];
-
 // jobs.json guarda responsibilities/requirements como string markdown;
 // parseJsonArray (models/jobs) espera JSON-array → se envuelve al sembrar.
 // Las filas viejas con JSON-string las tolera el fix de parseJsonArray.
@@ -90,18 +76,12 @@ async function seed() {
           ? [job.data.technology]
           : [];
 
-      // Determinar modalidad y ubicación
+      // jobs.json está normalizado: ubicación = país o "Remoto". La modalidad
+      // se deriva de ella: "Remoto" → remoto, país → presencial.
       const originalLocation = job.location || "";
       const isRemote = originalLocation.toLowerCase() === "remoto";
-
-      // Si era "Remoto", asignar modalidad remoto y ubicación random
-      // Si no, mantener ubicación y asignar modalidad presencial
       const modality = isRemote ? "remoto" : "presencial";
-      const location = isRemote
-        ? FALLBACK_LOCATIONS[
-            Math.floor(Math.random() * FALLBACK_LOCATIONS.length)
-          ]
-        : originalLocation;
+      const location = originalLocation;
 
       if (isRemote) remoteCount++;
 
@@ -128,7 +108,7 @@ async function seed() {
 
     console.log(`✅ Seed completado: ${jobs.length} empleos insertados.`);
     console.log(
-      `   📊 ${remoteCount} remotos (ubicación reasignada), ${jobs.length - remoteCount} presenciales (ubicación original).`,
+      `   📊 ${remoteCount} remotos, ${jobs.length - remoteCount} presenciales.`,
     );
   } catch (err) {
     console.error("❌ Error durante el seed de la base de datos:", err);

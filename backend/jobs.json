@@ -25,7 +25,7 @@
     "id": "d35b2c89-5d60-4f26-b19a-6cfb2f1a0f57",
     "title": "Analista de Datos",
     "company": "Data Driven Co.",
-    "location": "Ciudad de México",
+    "location": "México",
     "description": "Estamos buscando un analista de datos con experiencia en el manejo de grandes conjuntos de datos y herramientas de visualización. Se requiere conocimiento en SQL, Python y R.",
     "data": {
       "technology": [
@@ -48,7 +48,7 @@
     "id": "e31f9a92-61d7-4b7a-b3a2-91e8c1f40b2d",
     "title": "Desarrollador de Aplicaciones Móviles",
     "company": "Mobile Apps Ltd.",
-    "location": "Guadalajara",
+    "location": "México",
     "description": "Buscamos un desarrollador de aplicaciones móviles con experiencia en iOS y/o Android. El candidato debe tener conocimientos en Swift, Kotlin y el desarrollo de interfaces de usuario.",
     "data": {
       "technology": [
@@ -96,7 +96,7 @@
     "id": "a9f31a8e-ec38-4fd3-9114-88cc6d37a92b",
     "title": "Diseñador UX/UI",
     "company": "Creative Minds Studio",
-    "location": "Barcelona",
+    "location": "España",
     "description": "Estamos buscando un diseñador UX/UI con pasión por crear experiencias digitales excepcionales. Se requiere experiencia en Figma, diseño centrado en el usuario y colaboración con equipos de desarrollo.",
     "data": {
       "technology": [
@@ -119,7 +119,7 @@
     "id": "c1b65b42-68c5-4f1c-a8c2-8d52c5a7a5d1",
     "title": "Administrador de Bases de Datos",
     "company": "Secure Data Corp.",
-    "location": "Buenos Aires",
+    "location": "Argentina",
     "description": "Se busca un administrador de bases de datos con experiencia en PostgreSQL y MySQL. El candidato deberá asegurar la disponibilidad, seguridad y rendimiento de las bases de datos de producción.",
     "data": {
       "technology": [
@@ -165,7 +165,7 @@
     "id": "fe7b2c54-4f47-4e2b-9e87-2b5413a6b24f",
     "title": "Product Manager",
     "company": "NextGen Technologies",
-    "location": "Madrid",
+    "location": "España",
     "description": "Estamos buscando un Product Manager con experiencia en la definición y lanzamiento de productos digitales. Se requiere capacidad analítica, liderazgo y conocimiento en metodologías ágiles.",
     "data": {
       "technology": [
@@ -189,7 +189,7 @@
     "id": "a71f7a92-56d9-4b42-9f16-cb29b40e5f2c",
     "title": "Frontend Developer",
     "company": "Bright Web Studio",
-    "location": "Valencia",
+    "location": "España",
     "description": "Buscamos un desarrollador frontend con experiencia en React, TypeScript y Tailwind CSS. Se valorará conocimiento en optimización de rendimiento y accesibilidad web.",
     "data": {
       "technology": [
@@ -212,7 +212,7 @@
     "id": "f91e4c7b-3840-43da-8ad7-3a52e2a8cf1d",
     "title": "Backend Developer",
     "company": "APIWorks",
-    "location": "Bogotá",
+    "location": "Colombia",
     "description": "Estamos buscando un desarrollador backend con experiencia en Node.js, Express y bases de datos NoSQL. Se requiere conocimiento en arquitectura de microservicios.",
     "data": {
       "technology": [
@@ -259,7 +259,7 @@
     "id": "e8d13c45-36cb-46cf-8f9d-8a0a7b532b8b",
     "title": "QA Automation Engineer",
     "company": "Quality First",
-    "location": "Lima",
+    "location": "Perú",
     "description": "Se busca ingeniero de QA con experiencia en automatización de pruebas utilizando herramientas como Selenium, Cypress o Playwright. Conocimiento deseado en CI/CD.",
     "data": {
       "technology": [
@@ -283,7 +283,7 @@
     "id": "d2e93b8a-0b41-4d09-9a52-36a0f418d493",
     "title": "Administrador de Sistemas",
     "company": "InfraTech Global",
-    "location": "Santiago de Chile",
+    "location": "Chile",
     "description": "Buscamos un administrador de sistemas con experiencia en Linux, Docker y monitoreo de servidores. Conocimiento en scripting Bash o Python será un plus.",
     "data": {
       "technology": [
@@ -307,7 +307,7 @@
     "id": "cc0c1fae-4e85-4e2c-9b02-f12f9df8a2c9",
     "title": "Scrum Master",
     "company": "Agile Minds",
-    "location": "Madrid",
+    "location": "España",
     "description": "Estamos buscando un Scrum Master con experiencia en metodologías ágiles y gestión de equipos multidisciplinarios. Certificación Scrum Master deseable.",
     "data": {
       "technology": [
@@ -331,7 +331,7 @@
     "id": "a2f1d8c6-b72c-45f5-bcc5-5c1d1f39b0b1",
     "title": "Soporte Técnico Nivel 2",
     "company": "HelpDesk Pro",
-    "location": "Monterrey",
+    "location": "México",
     "description": "Buscamos un técnico de soporte con habilidades en resolución de incidencias, redes y sistemas operativos. Se requiere atención al detalle y excelente trato con el usuario.",
     "data": {
       "technology": [
@@ -378,7 +378,7 @@
     "id": "c4d9f0a3-8e52-4f93-b9c4-3g6d7e9f0b2c",
     "title": "Data Engineer",
     "company": "BigData Solutions",
-    "location": "Ciudad de México",
+    "location": "México",
     "description": "Buscamos ingeniero de datos con experiencia en pipelines ETL, Apache Spark y arquitecturas de data lakes. Conocimientos en AWS o GCP requeridos.",
     "data": {
       "technology": [
@@ -402,7 +402,7 @@
     "id": "d5e0a1b4-9f63-5a04-c0d5-4h7e8f0a1c3d",
     "title": "iOS Developer",
     "company": "AppFactory Inc.",
-    "location": "Guadalajara",
+    "location": "México",
     "description": "Desarrollador iOS con experiencia en Swift, SwiftUI y arquitectura MVVM. Se valorará portfolio de apps publicadas en App Store.",
     "data": {
       "technology": [
@@ -449,7 +449,7 @@
     "id": "f7g2c3d6-1b85-7c26-e2f7-6j9a0b2c3e5f",
     "title": "UX Researcher",
     "company": "UserCentric Design",
-    "location": "Barcelona",
+    "location": "España",
     "description": "Investigador UX para realizar estudios de usuarios, análisis de usabilidad y pruebas A/B. Experiencia con metodologías cualitativas y cuantitativas.",
     "data": {
       "technology": [
@@ -472,7 +472,7 @@
     "id": "g8h3d4e7-2c96-8d37-f3g8-7k0b1c3d4f6g",
     "title": "Database Administrator",
     "company": "DataSecure Systems",
-    "location": "Buenos Aires",
+    "location": "Argentina",
     "description": "Administrador de bases de datos con expertise en Oracle, SQL Server y MongoDB. Responsable de optimización, backups y recuperación ante desastres.",
     "data": {
       "technology": [
@@ -518,7 +518,7 @@
     "id": "i0j5f6g9-4e18-0f59-h5i0-9m2d3e5f6h8i",
     "title": "Technical Product Owner",
     "company": "AgileTech Solutions",
-    "location": "Madrid",
+    "location": "España",
     "description": "Product Owner técnico con background en desarrollo de software. Experiencia gestionando backlog, escribiendo user stories y trabajando con equipos ágiles.",
     "data": {
       "technology": [
@@ -542,7 +542,7 @@
     "id": "j1k6g7h0-5f29-1g60-i6j1-0n3e4f6g7i9j",
     "title": "React Native Developer",
     "company": "MobileFirst Studio",
-    "location": "Valencia",
+    "location": "España",
     "description": "Desarrollador especializado en React Native para crear aplicaciones móviles multiplataforma. Experiencia con integración de APIs y publicación en stores.",
     "data": {
       "technology": [
@@ -565,7 +565,7 @@
     "id": "k2l7h8i1-6g30-2h71-j7k2-1o4f5g7h8j0k",
     "title": "Golang Backend Engineer",
     "company": "ScalableSystems",
-    "location": "Bogotá",
+    "location": "Colombia",
     "description": "Ingeniero backend especializado en Go para desarrollo de microservicios de alto rendimiento. Experiencia con gRPC, PostgreSQL y sistemas distribuidos.",
     "data": {
       "technology": [
@@ -613,7 +613,7 @@
     "id": "m4n9j0k3-8i52-4j93-l9m4-3q6h7i9j0l2m",
     "title": "Manual QA Tester",
     "company": "QualityAssurance Pro",
-    "location": "Lima",
+    "location": "Perú",
     "description": "Tester manual para ejecutar planes de prueba, reportar bugs y validar funcionalidades. Experiencia con metodologías de testing y herramientas de gestión de casos.",
     "data": {
       "technology": [
@@ -636,7 +636,7 @@
     "id": "n5o0k1l4-9j63-5k04-m0n5-4r7i8j0k1m3n",
     "title": "Site Reliability Engineer",
     "company": "ReliableOps",
-    "location": "Santiago de Chile",
+    "location": "Chile",
     "description": "SRE para garantizar disponibilidad y rendimiento de sistemas críticos. Experiencia con Kubernetes, monitoring, alerting y automatización.",
     "data": {
       "technology": [
@@ -660,7 +660,7 @@
     "id": "o6p1l2m5-0k74-6l15-n1o6-5s8j9k1l2n4o",
     "title": "Agile Coach",
     "company": "TransformationHub",
-    "location": "Madrid",
+    "location": "España",
     "description": "Coach ágil para guiar equipos y organizaciones en transformación ágil. Experiencia con Scrum, Kanban, SAFe y facilitación de workshops.",
     "data": {
       "technology": [
@@ -684,7 +684,7 @@
     "id": "p7q2m3n6-1l85-7m26-o2p7-6t9k0l2m3o5p",
     "title": "IT Support Specialist",
     "company": "TechSupport Solutions",
-    "location": "Monterrey",
+    "location": "México",
     "description": "Especialista de soporte IT para atención de incidencias, mantenimiento de equipos y administración de usuarios. Conocimientos de Active Directory y Office 365.",
     "data": {
       "technology": [
@@ -731,7 +731,7 @@
     "id": "r9s4o5p8-3n07-9o48-q4r9-8v1m2n4o5q7r",
     "title": "Business Intelligence Analyst",
     "company": "DataInsights Corp",
-    "location": "Ciudad de México",
+    "location": "México",
     "description": "Analista de BI para crear dashboards, reportes y análisis de datos de negocio. Experiencia con Power BI, Tableau y SQL requerida.",
     "data": {
       "technology": [
@@ -755,7 +755,7 @@
     "id": "s0t5p6q9-4o18-0p59-r5s0-9w2n3o5p6r8s",
     "title": "Android Developer",
     "company": "MobileTech Studio",
-    "location": "Guadalajara",
+    "location": "México",
     "description": "Desarrollador Android nativo con experiencia en Kotlin, Jetpack Compose y arquitectura MVVM. Portfolio de apps publicadas es un plus.",
     "data": {
       "technology": [
@@ -822,7 +822,7 @@
     "id": "e84643e4-74f1-40e3-b3e1-3f4659438824",
     "title": "Backend Developer Node.js",
     "company": "Río Labs",
-    "location": "Buenos Aires",
+    "location": "Argentina",
     "description": "Backend Node para APIs de logística con alto tráfico. Híbrido en Palermo.",
     "data": {
       "technology": [
@@ -863,7 +863,7 @@
     "id": "67bcd646-b5f1-43ce-a6a2-e2f1e6425c13",
     "title": "Desarrollador Python Junior",
     "company": "Andina Soft",
-    "location": "CDMX, México",
+    "location": "México",
     "description": "Puesto junior para sumarse al equipo de integraciones. Capacitación paga y mentor asignado.",
     "data": {
       "technology": [
@@ -904,7 +904,7 @@
     "id": "c819e26a-e7c0-4ff6-becb-3a0ae48160e2",
     "title": "Desarrollador Mobile Flutter",
     "company": "MateApp",
-    "location": "Guadalajara, México",
+    "location": "México",
     "description": "App de delivery con 1M de descargas busca dev Flutter para el equipo de pagos.",
     "data": {
       "technology": [
@@ -966,7 +966,7 @@
     "id": "178ee812-69ef-4eb4-b770-747bd7217c4c",
     "title": "Tech Lead Fullstack",
     "company": "Fondo Capital",
-    "location": "Barcelona, España",
+    "location": "España",
     "description": "Liderar squad de 5 en plataforma de inversiones. Inglés diario.",
     "data": {
       "technology": [
@@ -987,7 +987,7 @@
     "id": "3dce126f-9f09-4101-86e3-141f213f5549",
     "title": "Desarrollador PHP Laravel",
     "company": "TiendaNube Partners",
-    "location": "Monterrey, México",
+    "location": "México",
     "description": "E-commerce en Laravel: módulos de promociones y cupones.",
     "data": {
       "technology": [
@@ -1071,7 +1071,7 @@
     "id": "47d7879c-2aff-4d32-87e4-fce835b4f2ec",
     "title": "Security Engineer",
     "company": "Banco del Litoral",
-    "location": "Buenos Aires",
+    "location": "Argentina",
     "description": "AppSec para home banking: SAST, threat modeling y respuesta.",
     "data": {
       "technology": [
@@ -1092,7 +1092,7 @@
     "id": "a5f4fe01-9ab9-4aaa-aefe-de16cb10ba24",
     "title": "Desarrollador C# .NET",
     "company": "SaludPlus",
-    "location": "CDMX, México",
+    "location": "México",
     "description": "Historia clínica electrónica en .NET 8. Impacto real en hospitales.",
     "data": {
       "technology": [
@@ -1175,7 +1175,7 @@
     "id": "363b9d1a-04ac-457e-bd19-3e03d0004d19",
     "title": "Ingeniero de Datos Junior",
     "company": "Verde Energía",
-    "location": "Guadalajara, México",
+    "location": "México",
     "description": "Datos de generación solar: ingesta y tableros.",
     "data": {
       "technology": [
@@ -1217,7 +1217,7 @@
     "id": "98cd0e63-8835-42d5-80be-a4925d4db6cd",
     "title": "Desarrollador Java Spring",
     "company": "Aseguradora Andina",
-    "location": "Barcelona, España",
+    "location": "España",
     "description": "Microservicios Spring para pólizas. Español e inglés.",
     "data": {
       "technology": [
@@ -1237,7 +1237,7 @@
     "id": "402aa0c9-d499-4334-a467-8622f503c41c",
     "title": "Soporte Técnico N2",
     "company": "Redes del Norte",
-    "location": "Monterrey, México",
+    "location": "México",
     "description": "Soporte a ISPs: routing, BGP y fibra.",
     "data": {
       "technology": [
@@ -1278,7 +1278,7 @@
     "id": "db80f012-82d3-4ff8-be7a-2db5cc7a6ca7",
     "title": "Desarrollador C++ Embebidos",
     "company": "SatCom",
-    "location": "Buenos Aires",
+    "location": "Argentina",
     "description": "Firmware para estaciones terrenas satelitales.",
     "data": {
       "technology": [
