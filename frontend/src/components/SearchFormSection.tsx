@@ -8,6 +8,14 @@ import {
   useRef,
   useState,
 } from 'react';
+import { API_URL } from '@/config';
+import { JOB_LEVELS } from '@/constants/levels';
+
+/** Valores de los selects que vienen de GET /jobs/options (DB real). */
+interface FilterOptions {
+  technologies: string[];
+  locations: string[];
+}
 
 /** Filtros del buscador: forma compartida con SearchPage (la URL manda). */
 export interface JobFilters {
@@ -120,6 +128,33 @@ export function SearchFormSection({
 
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    technologies: [],
+    locations: [],
+  });
+
+  // Opciones de tecnología/ubicación desde la DB: una sola petición y los
+  // selects muestran exactamente lo que hay (sin listas hardcodeadas).
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadOptions() {
+      try {
+        const response = await fetch(`${API_URL}/jobs/options`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        setFilterOptions(await response.json());
+      } catch {
+        // Red caída o desmontaje: los selects quedan con el placeholder
+      }
+    }
+
+    loadOptions();
+
+    return () => controller.abort();
+  }, []);
+
   // La URL manda (atrás/adelante): refleja el texto en el input no controlado
   useEffect(() => {
     if (inputRef.current && inputRef.current.value !== (initialText ?? '')) {
@@ -195,20 +230,11 @@ export function SearchFormSection({
             defaultValue={initialFilters.technology}
           >
             <option value="">Tecnología</option>
-            <optgroup label="Tecnologías populares">
-              <option value="javascript">JavaScript</option>
-              <option value="python">Python</option>
-              <option value="react">React</option>
-              <option value="nodejs">Node.js</option>
-            </optgroup>
-            <option value="java">Java</option>
-            <hr />
-            <option value="csharp">C#</option>
-            <option value="c">C</option>
-            <option value="c++">C++</option>
-            <hr />
-            <option value="ruby">Ruby</option>
-            <option value="php">PHP</option>
+            {filterOptions.technologies.map((technology) => (
+              <option key={technology} value={technology}>
+                {technology}
+              </option>
+            ))}
           </select>
 
           <select
@@ -217,11 +243,11 @@ export function SearchFormSection({
             defaultValue={initialFilters.location}
           >
             <option value="">Ubicación</option>
-            <option value="remoto">Remoto</option>
-            <option value="cdmx">Ciudad de México</option>
-            <option value="guadalajara">Guadalajara</option>
-            <option value="monterrey">Monterrey</option>
-            <option value="barcelona">Barcelona</option>
+            {filterOptions.locations.map((location) => (
+              <option key={location} value={location}>
+                {location}
+              </option>
+            ))}
           </select>
 
           <select
@@ -230,10 +256,11 @@ export function SearchFormSection({
             defaultValue={initialFilters.experienceLevel}
           >
             <option value="">Nivel de experiencia</option>
-            <option value="junior">Junior</option>
-            <option value="mid-level">Mid-level</option>
-            <option value="senior">Senior</option>
-            <option value="lead">Lead</option>
+            {Object.entries(JOB_LEVELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
           </select>
         </div>
       </form>

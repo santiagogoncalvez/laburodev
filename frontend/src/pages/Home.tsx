@@ -1,10 +1,20 @@
-import { Search } from 'lucide-react';
-import type { FormEvent } from 'react';
+import { Search, X } from 'lucide-react';
+import { type FormEvent, useRef, useState } from 'react';
 import { useRouter } from '@/hooks/useRouter';
 import styles from './Home.module.css';
 
 export default function HomePage() {
   const { navigateTo } = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [hasText, setHasText] = useState(false);
+
+  const handleClear = () => {
+    if (inputRef.current) {
+      inputRef.current.value = '';
+      inputRef.current.focus();
+    }
+    setHasText(false);
+  };
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -34,11 +44,24 @@ export default function HomePage() {
             <Search size={20} aria-hidden="true" />
 
             <input
+              ref={inputRef}
               name="search"
               required
               type="search"
               placeholder="Buscar empleos por título, habilidad o empresa"
+              onChange={(event) => setHasText(event.target.value.length > 0)}
             />
+
+            {hasText && (
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Limpiar búsqueda"
+                onClick={handleClear}
+              >
+                <X size={18} />
+              </button>
+            )}
 
             <button className="btn btn-primary" type="submit">
               Buscar

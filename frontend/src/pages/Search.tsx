@@ -21,7 +21,7 @@ const readFromParams = (sp: URLSearchParams) => {
   return {
     filters: {
       technology: sp.get('technology') || '',
-      location: sp.get('type') || '',
+      location: sp.get('location') || '',
       experienceLevel: sp.get('level') || '',
     },
     text: sp.get('text') || '',
@@ -57,7 +57,7 @@ const useFilters = () => {
         const params = new URLSearchParams();
         if (textToFilter) params.append('text', textToFilter);
         if (filters.technology) params.append('technology', filters.technology);
-        if (filters.location) params.append('type', filters.location);
+        if (filters.location) params.append('location', filters.location);
         if (filters.experienceLevel)
           params.append('level', filters.experienceLevel);
 
@@ -123,7 +123,7 @@ const useFilters = () => {
     const params = new URLSearchParams();
     if (text) params.set('text', text);
     if (filters.technology) params.set('technology', filters.technology);
-    if (filters.location) params.set('type', filters.location);
+    if (filters.location) params.set('location', filters.location);
     if (filters.experienceLevel) params.set('level', filters.experienceLevel);
 
     if (page > 1) params.set('page', String(page));

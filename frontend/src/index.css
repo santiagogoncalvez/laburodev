@@ -367,6 +367,13 @@ footer {
 	padding: 0.6rem 0.25rem;
 }
 
+/* La cruz nativa de input[type=search] no es de nuestro estilo y duplica el
+   botón de limpiar: se oculta y se usa el botón icon-btn con estilo propio. */
+.search-bar input::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+	appearance: none;
+}
+
 .search-filters {
 	display: flex;
 	flex-wrap: wrap;
