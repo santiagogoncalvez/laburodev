@@ -27,6 +27,7 @@ export class JobController {
       offset = DEFAULTS.LIMIT_OFFSET,
       technology,
       modality,
+      location,
     } = req.query;
 
     const result = await JobService.getAll({
@@ -34,6 +35,7 @@ export class JobController {
       level: single(level),
       technology: single(technology),
       modality: single(modality),
+      location: single(location),
       limit: Number(limit),
       offset: Number(offset),
     });
@@ -41,6 +43,10 @@ export class JobController {
     if (!result.ok) return sendServiceError(res, result);
 
     return res.json(result.data);
+  }
+
+  static async getOptions(_req: Request, res: Response) {
+    return res.json(await JobService.options());
   }
 
   static async getId(req: Request<{ id: string }>, res: Response) {

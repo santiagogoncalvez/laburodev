@@ -7,6 +7,7 @@ import type {
   JobUpdateInput,
 } from "@/schemas/jobs.js";
 import type {
+  FilterOptions,
   GetAllParams,
   Job,
   PaginatedJobsResponse,
@@ -60,6 +61,7 @@ export class JobModel {
     level,
     technology,
     modality,
+    location,
   }: GetAllParams = {}): Promise<PaginatedJobsResponse> {
     let sql = "SELECT * FROM jobs WHERE 1=1";
     const params: (string | number)[] = [];
@@ -75,13 +77,21 @@ export class JobModel {
     }
 
     if (technology) {
-      sql += " AND technology LIKE ?";
-      params.push(`%${technology}%`);
+      // Match EXACTO del elemento dentro del array JSON: "java" no coincide
+      // con "javascript". json_each recorre el array guardado en la columna.
+      sql +=
+        " AND EXISTS (SELECT 1 FROM json_each(jobs.technology) WHERE json_each.value = ?)";
+      params.push(technology);
     }
 
     if (modality) {
       sql += " AND modality = ?";
       params.push(modality);
+    }
+
+    if (location) {
+      sql += " AND location = ?";
+      params.push(location);
     }
 
     const countSql = sql.replace("SELECT *", "SELECT COUNT(*) as count");
@@ -102,6 +112,31 @@ export class JobModel {
       total: total,
       limit: Number(limit ?? 10),
       offset: Number(offset ?? 0),
+    };
+  }
+
+  // Opciones para los selects de filtros: valores distintos reales de la DB.
+  static async options(): Promise<FilterOptions> {
+    const [techRows, locationRows, levelRows] = await Promise.all([
+      db.execute("SELECT DISTINCT technology FROM jobs"),
+      db.execute("SELECT DISTINCT location FROM jobs"),
+      db.execute("SELECT DISTINCT level FROM jobs"),
+    ]);
+
+    const technologies = new Set<string>();
+    for (const row of techRows.rows) {
+      for (const tech of parseJsonArray(row.technology)) technologies.add(tech);
+    }
+
+    const compare = (a: string, b: string) => a.localeCompare(b, "es");
+
+    return {
+      technologies: [...technologies].sort(compare),
+      locations: locationRows.rows
+        .map((row) => asString(row.location))
+        .filter((location) => location !== "")
+        .sort(compare),
+      levels: levelRows.rows.map((row) => asString(row.level)).sort(compare),
     };
   }
 

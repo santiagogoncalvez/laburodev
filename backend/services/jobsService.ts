@@ -2,6 +2,7 @@ import { DEFAULTS } from "@/config.js";
 import { JobModel } from "@/models/jobs.js";
 import { validateJob, validatePartialJob } from "@/schemas/jobs.js";
 import type {
+  FilterOptions,
   GetAllParams,
   Job,
   PaginatedJobsResponse,
@@ -58,6 +59,10 @@ export class JobService {
   static async getById(id: string): Promise<ServiceResult<Job>> {
     const job = await JobModel.getById(id);
     return job ? { ok: true, data: job } : notFound;
+  }
+
+  static async options(): Promise<FilterOptions> {
+    return JobModel.options();
   }
 
   static async create(body: unknown): Promise<ServiceResult<Job | null>> {

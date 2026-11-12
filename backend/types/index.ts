@@ -43,4 +43,12 @@ export interface GetAllParams {
   level?: string;
   technology?: string;
   modality?: string;
+  location?: string;
+}
+
+/** Valores distintos que alimentan los selects de filtros (GET /jobs/options). */
+export interface FilterOptions {
+  technologies: string[];
+  locations: string[];
+  levels: string[];
 }

@@ -7,6 +7,7 @@ export const jobsRouter = Router();
 // GET abierto; escrituras protegidas con x-api-key (guard temporal, ver
 // middlewares/writeGuard.ts) hasta que exista auth real.
 jobsRouter.get("/", JobController.getAll);
+jobsRouter.get("/options", JobController.getOptions);
 jobsRouter.get("/:id", JobController.getId);
 jobsRouter.post("/", writeGuard, JobController.create);
 jobsRouter.put("/:id", writeGuard, JobController.update);
