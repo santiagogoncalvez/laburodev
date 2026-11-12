@@ -1,14 +1,6 @@
 import type { Request, Response } from "express";
 import { DEFAULTS } from "@/config.js";
-import { validateJob, validatePartialJob } from "@/schemas/jobs.js";
-import { JobService } from "@/services/jobsService.js";
-
-function validationError(
-  res: Response,
-  result: { error: { issues: { message: string }[] } },
-) {
-  return res.status(400).json({ message: result.error.issues[0].message });
-}
+import { JobService, type ServiceError } from "@/services/jobsService.js";
 
 // Query params de Express llegan como string | string[] | ParsedQs: en el
 // borde solo aceptamos string real. Se verifica con typeof (narrowing), no
@@ -16,6 +8,16 @@ function validationError(
 const single = (v: unknown): string | undefined =>
   typeof v === "string" ? v : undefined;
 
+// El servicio devuelve códigos de dominio; acá se traducen a HTTP.
+function sendServiceError(res: Response, error: ServiceError): Response {
+  if (error.code === "not_found") {
+    return res.status(404).json({ message: "Job not found" });
+  }
+  return res.status(400).json({ message: error.message });
+}
+
+// Controller delgado: parsea la petición HTTP, delega la lógica de negocio
+// (Zod, reglas de paginación, DB) en JobService y traduce su resultado a HTTP.
 export class JobController {
   static async getAll(req: Request, res: Response) {
     const {
@@ -27,123 +29,56 @@ export class JobController {
       modality,
     } = req.query;
 
-    const limitNumber = Number(limit);
-    const offsetNumber = Number(offset);
-
-    if (
-      !Number.isInteger(limitNumber) ||
-      !Number.isInteger(offsetNumber) ||
-      limitNumber < 1 ||
-      offsetNumber < 0
-    ) {
-      return res
-        .status(400)
-        .json({ message: "limit and offset must be valid numbers" });
-    }
-
-    const {
-      data,
-      total,
-      limit: responseLimit,
-      offset: responseOffset,
-    } = await JobService.getAll({
+    const result = await JobService.getAll({
       search: single(text),
       level: single(level),
       technology: single(technology),
       modality: single(modality),
-      limit: Math.min(limitNumber, DEFAULTS.MAX_LIMIT_PAGINATION),
-      offset: offsetNumber,
+      limit: Number(limit),
+      offset: Number(offset),
     });
 
-    return res.json({
-      data,
-      total,
-      limit: responseLimit,
-      offset: responseOffset,
-    });
+    if (!result.ok) return sendServiceError(res, result);
+
+    return res.json(result.data);
   }
 
   static async getId(req: Request<{ id: string }>, res: Response) {
-    const { id } = req.params;
+    const result = await JobService.getById(req.params.id);
 
-    const job = await JobService.getById(id);
+    if (!result.ok) return sendServiceError(res, result);
 
-    if (!job) {
-      return res.status(404).json({ message: "Job not found" });
-    }
-
-    return res.json(job);
+    return res.json(result.data);
   }
 
   static async create(req: Request, res: Response) {
-    const result = validateJob(req.body);
+    const result = await JobService.create(req.body);
 
-    if (!result.success) {
-      return validationError(res, result);
-    }
+    if (!result.ok) return sendServiceError(res, result);
 
-    const newJob = await JobService.create(result.data);
-
-    return res.status(201).json(newJob);
+    return res.status(201).json(result.data);
   }
 
   static async update(req: Request<{ id: string }>, res: Response) {
-    const { id } = req.params;
+    const result = await JobService.update(req.params.id, req.body);
 
-    const result = validateJob(req.body);
+    if (!result.ok) return sendServiceError(res, result);
 
-    if (!result.success) {
-      return validationError(res, result);
-    }
-
-    const updatedJob = await JobService.update(id, result.data);
-
-    if (!updatedJob) {
-      return res.status(404).json({ message: "Job not found" });
-    }
-
-    return res.json(updatedJob);
+    return res.json(result.data);
   }
 
   static async partialUpdate(req: Request<{ id: string }>, res: Response) {
-    const { id } = req.params;
+    const result = await JobService.partialUpdate(req.params.id, req.body);
 
-    const { title, company, location, description, data, content } = req.body;
+    if (!result.ok) return sendServiceError(res, result);
 
-    if (
-      title === undefined &&
-      company === undefined &&
-      location === undefined &&
-      description === undefined &&
-      data === undefined &&
-      content === undefined
-    ) {
-      return res.status(400).json({ message: "nothing to update" });
-    }
-
-    const result = validatePartialJob(req.body);
-
-    if (!result.success) {
-      return validationError(res, result);
-    }
-
-    const updatedJob = await JobService.partialUpdate(id, result.data);
-
-    if (!updatedJob) {
-      return res.status(404).json({ message: "Job not found" });
-    }
-
-    return res.json(updatedJob);
+    return res.json(result.data);
   }
 
   static async delete(req: Request<{ id: string }>, res: Response) {
-    const { id } = req.params;
+    const result = await JobService.delete(req.params.id);
 
-    const deleted = await JobService.delete(id);
-
-    if (!deleted) {
-      return res.status(404).json({ message: "Job not found" });
-    }
+    if (!result.ok) return sendServiceError(res, result);
 
     return res.status(204).end();
   }
