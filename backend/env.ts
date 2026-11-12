@@ -6,5 +6,5 @@ import { existsSync } from "node:fs";
 // antes de que config/cors/db lean las variables en el top de sus módulos.
 // (process.loadEnvFile no pisa variables ya presentes en el entorno.)
 if (existsSync(".env")) {
-   process.loadEnvFile();
+  process.loadEnvFile();
 }

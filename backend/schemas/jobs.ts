@@ -1,4 +1,4 @@
-import * as z from "zod";
+import { z } from "zod";
 
 /*
 {
@@ -28,45 +28,45 @@ import * as z from "zod";
 const LEVELS = ["junior", "mid-level", "senior", "lead"] as const;
 
 const dataSchema = z.object({
-   technology: z
-      .array(z.string().min(1, "Las tecnologías no pueden estar vacías"))
-      .min(1, "Debe haber al menos una tecnología"),
-   mode: z.string().optional(),
-   level: z.enum(LEVELS, { error: "El nivel no es válido" }).optional(),
+  technology: z
+    .array(z.string().min(1, "Las tecnologías no pueden estar vacías"))
+    .min(1, "Debe haber al menos una tecnología"),
+  mode: z.string().optional(),
+  level: z.enum(LEVELS, { error: "El nivel no es válido" }).optional(),
 });
 
 const contentSchema = z.object({
-   description: z.string().optional(),
-   responsibilities: z.array(z.string()).optional(),
-   requirements: z.array(z.string()).optional(),
-   about: z.string().optional(),
+  description: z.string().optional(),
+  responsibilities: z.array(z.string()).optional(),
+  requirements: z.array(z.string()).optional(),
+  about: z.string().optional(),
 });
 
 const jobSchema = z.object({
-   title: z
-      .string({
-         error: "El título es obligatorio",
-      })
-      .min(3, "El título debe tener al menos 3 caracteres")
-      .max(100, "El título no puede tener más de 100 caracteres"),
-   company: z
-      .string({
-         error: "La empresa es obligatoria",
-      })
-      .min(1, "La empresa es obligatoria"),
-   location: z.string().optional(),
-   description: z.string().optional(),
-   data: dataSchema,
-   content: contentSchema.optional(),
+  title: z
+    .string({
+      error: "El título es obligatorio",
+    })
+    .min(3, "El título debe tener al menos 3 caracteres")
+    .max(100, "El título no puede tener más de 100 caracteres"),
+  company: z
+    .string({
+      error: "La empresa es obligatoria",
+    })
+    .min(1, "La empresa es obligatoria"),
+  location: z.string().optional(),
+  description: z.string().optional(),
+  data: dataSchema,
+  content: contentSchema.optional(),
 });
 
 const partialJobSchema = z.object({
-   title: jobSchema.shape.title.optional(),
-   company: jobSchema.shape.company.optional(),
-   location: jobSchema.shape.location,
-   description: jobSchema.shape.description,
-   data: dataSchema.partial().optional(),
-   content: contentSchema.partial().optional(),
+  title: jobSchema.shape.title.optional(),
+  company: jobSchema.shape.company.optional(),
+  location: jobSchema.shape.location,
+  description: jobSchema.shape.description,
+  data: dataSchema.partial().optional(),
+  content: contentSchema.partial().optional(),
 });
 
 // Tipos de entrada derivados del esquema (una sola fuente de verdad).
@@ -76,9 +76,9 @@ export type JobDataInput = z.infer<typeof dataSchema>;
 export type JobContentInput = z.infer<typeof contentSchema>;
 
 export function validateJob(job: unknown) {
-   return jobSchema.safeParse(job);
+  return jobSchema.safeParse(job);
 }
 
 export function validatePartialJob(job: unknown) {
-   return partialJobSchema.safeParse(job);
+  return partialJobSchema.safeParse(job);
 }

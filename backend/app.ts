@@ -1,13 +1,13 @@
 import "./env.js"; // PRIMERO: .env cargado antes de que config/cors/db lean process.env
+import type { NextFunction, Request, Response } from "express";
 import express from "express";
-import type { Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 
 import { DEFAULTS } from "./config.js";
 import { corsMiddleware } from "./middlewares/cors.js";
-import { jobsRouter } from "./routes/jobs.js";
-import { aiRouter } from "./routes/ai.js";
 import { generalLimiter } from "./middlewares/rateLimit.js";
+import { aiRouter } from "./routes/ai.js";
+import { jobsRouter } from "./routes/jobs.js";
 
 const PORT = process.env.PORT ?? DEFAULTS.PORT;
 
@@ -24,35 +24,37 @@ app.use(generalLimiter);
 app.use("/jobs", jobsRouter);
 app.use("/ai", aiRouter);
 
-app.get("/health", (req, res) => {
-   res.json({ status: "ok", timestamp: new Date().toISOString() });
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.use((req, res) => {
-   res.status(404).json({ message: "Not found" });
+app.use((_req, res) => {
+  res.status(404).json({ message: "Not found" });
 });
 
 // El body-parser marca JSON inválido con err.type = "entity.parse.failed".
 // Guard verificado (instanceof + in + igualdad) en vez de tipar err como any.
 function isInvalidJson(err: unknown): err is Error & { type: string } {
-   return err instanceof Error && "type" in err && err.type === "entity.parse.failed";
+  return (
+    err instanceof Error && "type" in err && err.type === "entity.parse.failed"
+  );
 }
 
 // eslint-disable-next-line no-unused-vars
-app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
-   console.error(err);
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  console.error(err);
 
-   if (isInvalidJson(err)) {
-      return res.status(400).json({ message: "Invalid JSON body" });
-   }
+  if (isInvalidJson(err)) {
+    return res.status(400).json({ message: "Invalid JSON body" });
+  }
 
-   res.status(500).json({ message: "Internal server error" });
+  res.status(500).json({ message: "Internal server error" });
 });
 
 if (process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test") {
-   app.listen(PORT, () => {
-      console.log(`Server is running on port http://localhost:${PORT}`);
-   });
+  app.listen(PORT, () => {
+    console.log(`Server is running on port http://localhost:${PORT}`);
+  });
 }
 
 export default app;

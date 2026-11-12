@@ -1,147 +1,150 @@
 import type { Request, Response } from "express";
-import { JobService } from "@/services/jobsService.js";
 import { DEFAULTS } from "@/config.js";
 import { validateJob, validatePartialJob } from "@/schemas/jobs.js";
+import { JobService } from "@/services/jobsService.js";
 
-function validationError(res: Response, result: { error: { issues: { message: string }[] } }) {
-   return res.status(400).json({ message: result.error.issues[0].message });
+function validationError(
+  res: Response,
+  result: { error: { issues: { message: string }[] } },
+) {
+  return res.status(400).json({ message: result.error.issues[0].message });
 }
 
 // Query params de Express llegan como string | string[] | ParsedQs: en el
 // borde solo aceptamos string real. Se verifica con typeof (narrowing), no
 // con `as` — un ?text=a&text=b hoy se ignora en vez de reventar en libSQL.
 const single = (v: unknown): string | undefined =>
-   typeof v === "string" ? v : undefined;
+  typeof v === "string" ? v : undefined;
 
 export class JobController {
-   static async getAll(req: Request, res: Response) {
-      const {
-         text,
-         level,
-         limit = DEFAULTS.LIMIT_PAGINATION,
-         offset = DEFAULTS.LIMIT_OFFSET,
-         technology,
-         modality,
-      } = req.query;
+  static async getAll(req: Request, res: Response) {
+    const {
+      text,
+      level,
+      limit = DEFAULTS.LIMIT_PAGINATION,
+      offset = DEFAULTS.LIMIT_OFFSET,
+      technology,
+      modality,
+    } = req.query;
 
-      const limitNumber = Number(limit);
-      const offsetNumber = Number(offset);
+    const limitNumber = Number(limit);
+    const offsetNumber = Number(offset);
 
-      if (
-         !Number.isInteger(limitNumber) ||
-         !Number.isInteger(offsetNumber) ||
-         limitNumber < 1 ||
-         offsetNumber < 0
-      ) {
-         return res
-            .status(400)
-            .json({ message: "limit and offset must be valid numbers" });
-      }
+    if (
+      !Number.isInteger(limitNumber) ||
+      !Number.isInteger(offsetNumber) ||
+      limitNumber < 1 ||
+      offsetNumber < 0
+    ) {
+      return res
+        .status(400)
+        .json({ message: "limit and offset must be valid numbers" });
+    }
 
-      const {
-         data,
-         total,
-         limit: responseLimit,
-         offset: responseOffset,
-      } = await JobService.getAll({
-         search: single(text),
-         level: single(level),
-         technology: single(technology),
-         modality: single(modality),
-         limit: Math.min(limitNumber, DEFAULTS.MAX_LIMIT_PAGINATION),
-         offset: offsetNumber,
-      });
+    const {
+      data,
+      total,
+      limit: responseLimit,
+      offset: responseOffset,
+    } = await JobService.getAll({
+      search: single(text),
+      level: single(level),
+      technology: single(technology),
+      modality: single(modality),
+      limit: Math.min(limitNumber, DEFAULTS.MAX_LIMIT_PAGINATION),
+      offset: offsetNumber,
+    });
 
-      return res.json({
-         data,
-         total,
-         limit: responseLimit,
-         offset: responseOffset,
-      });
-   }
+    return res.json({
+      data,
+      total,
+      limit: responseLimit,
+      offset: responseOffset,
+    });
+  }
 
-   static async getId(req: Request<{ id: string }>, res: Response) {
-      const { id } = req.params;
+  static async getId(req: Request<{ id: string }>, res: Response) {
+    const { id } = req.params;
 
-      const job = await JobService.getById(id);
+    const job = await JobService.getById(id);
 
-      if (!job) {
-         return res.status(404).json({ message: "Job not found" });
-      }
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
 
-      return res.json(job);
-   }
+    return res.json(job);
+  }
 
-   static async create(req: Request, res: Response) {
-      const result = validateJob(req.body);
+  static async create(req: Request, res: Response) {
+    const result = validateJob(req.body);
 
-      if (!result.success) {
-         return validationError(res, result);
-      }
+    if (!result.success) {
+      return validationError(res, result);
+    }
 
-      const newJob = await JobService.create(result.data);
+    const newJob = await JobService.create(result.data);
 
-      return res.status(201).json(newJob);
-   }
+    return res.status(201).json(newJob);
+  }
 
-   static async update(req: Request<{ id: string }>, res: Response) {
-      const { id } = req.params;
+  static async update(req: Request<{ id: string }>, res: Response) {
+    const { id } = req.params;
 
-      const result = validateJob(req.body);
+    const result = validateJob(req.body);
 
-      if (!result.success) {
-         return validationError(res, result);
-      }
+    if (!result.success) {
+      return validationError(res, result);
+    }
 
-      const updatedJob = await JobService.update(id, result.data);
+    const updatedJob = await JobService.update(id, result.data);
 
-      if (!updatedJob) {
-         return res.status(404).json({ message: "Job not found" });
-      }
+    if (!updatedJob) {
+      return res.status(404).json({ message: "Job not found" });
+    }
 
-      return res.json(updatedJob);
-   }
+    return res.json(updatedJob);
+  }
 
-   static async partialUpdate(req: Request<{ id: string }>, res: Response) {
-      const { id } = req.params;
+  static async partialUpdate(req: Request<{ id: string }>, res: Response) {
+    const { id } = req.params;
 
-      const { title, company, location, description, data, content } = req.body;
+    const { title, company, location, description, data, content } = req.body;
 
-      if (
-         title === undefined &&
-         company === undefined &&
-         location === undefined &&
-         description === undefined &&
-         data === undefined &&
-         content === undefined
-      ) {
-         return res.status(400).json({ message: "nothing to update" });
-      }
+    if (
+      title === undefined &&
+      company === undefined &&
+      location === undefined &&
+      description === undefined &&
+      data === undefined &&
+      content === undefined
+    ) {
+      return res.status(400).json({ message: "nothing to update" });
+    }
 
-      const result = validatePartialJob(req.body);
+    const result = validatePartialJob(req.body);
 
-      if (!result.success) {
-         return validationError(res, result);
-      }
+    if (!result.success) {
+      return validationError(res, result);
+    }
 
-      const updatedJob = await JobService.partialUpdate(id, result.data);
+    const updatedJob = await JobService.partialUpdate(id, result.data);
 
-      if (!updatedJob) {
-         return res.status(404).json({ message: "Job not found" });
-      }
+    if (!updatedJob) {
+      return res.status(404).json({ message: "Job not found" });
+    }
 
-      return res.json(updatedJob);
-   }
+    return res.json(updatedJob);
+  }
 
-   static async delete(req: Request<{ id: string }>, res: Response) {
-      const { id } = req.params;
+  static async delete(req: Request<{ id: string }>, res: Response) {
+    const { id } = req.params;
 
-      const deleted = await JobService.delete(id);
+    const deleted = await JobService.delete(id);
 
-      if (!deleted) {
-         return res.status(404).json({ message: "Job not found" });
-      }
+    if (!deleted) {
+      return res.status(404).json({ message: "Job not found" });
+    }
 
-      return res.status(204).end();
-   }
+    return res.status(204).end();
+  }
 }

@@ -41,22 +41,32 @@ async function seed() {
     // Migración: agregar columnas faltantes si la tabla ya existía sin ellas
     console.log("⏳ Verificando migraciones de columnas...");
     const tableInfo = await db.execute("PRAGMA table_info(jobs)");
-    const columns = tableInfo.rows.map(r => r.name);
+    const columns = tableInfo.rows.map((r) => r.name);
 
     if (!columns.includes("modality")) {
-      await db.execute("ALTER TABLE jobs ADD COLUMN modality TEXT NOT NULL DEFAULT 'remoto'");
+      await db.execute(
+        "ALTER TABLE jobs ADD COLUMN modality TEXT NOT NULL DEFAULT 'remoto'",
+      );
       console.log("  ➕ Columna 'modality' agregada.");
     }
     if (!columns.includes("technology")) {
-      await db.execute("ALTER TABLE jobs ADD COLUMN technology TEXT NOT NULL DEFAULT '[]'");
+      await db.execute(
+        "ALTER TABLE jobs ADD COLUMN technology TEXT NOT NULL DEFAULT '[]'",
+      );
       console.log("  ➕ Columna 'technology' agregada.");
     }
     console.log("✅ Migración verificada.");
 
     // Crear índices después de asegurar que las columnas existan
-    await db.execute("CREATE INDEX IF NOT EXISTS idx_jobs_level ON jobs(level)");
-    await db.execute("CREATE INDEX IF NOT EXISTS idx_jobs_title ON jobs(title)");
-    await db.execute("CREATE INDEX IF NOT EXISTS idx_jobs_modality ON jobs(modality)");
+    await db.execute(
+      "CREATE INDEX IF NOT EXISTS idx_jobs_level ON jobs(level)",
+    );
+    await db.execute(
+      "CREATE INDEX IF NOT EXISTS idx_jobs_title ON jobs(title)",
+    );
+    await db.execute(
+      "CREATE INDEX IF NOT EXISTS idx_jobs_modality ON jobs(modality)",
+    );
     console.log("✅ Índices creados/verificados.");
 
     console.log("⏳ Importando datos desde jobs.json...");
@@ -76,7 +86,9 @@ async function seed() {
     for (const job of jobs) {
       const techArray = Array.isArray(job.data?.technology)
         ? job.data.technology
-        : (job.data?.technology ? [job.data.technology] : []);
+        : job.data?.technology
+          ? [job.data.technology]
+          : [];
 
       // Determinar modalidad y ubicación
       const originalLocation = job.location || "";
@@ -86,7 +98,9 @@ async function seed() {
       // Si no, mantener ubicación y asignar modalidad presencial
       const modality = isRemote ? "remoto" : "presencial";
       const location = isRemote
-        ? FALLBACK_LOCATIONS[Math.floor(Math.random() * FALLBACK_LOCATIONS.length)]
+        ? FALLBACK_LOCATIONS[
+            Math.floor(Math.random() * FALLBACK_LOCATIONS.length)
+          ]
         : originalLocation;
 
       if (isRemote) remoteCount++;
@@ -113,7 +127,9 @@ async function seed() {
     }
 
     console.log(`✅ Seed completado: ${jobs.length} empleos insertados.`);
-    console.log(`   📊 ${remoteCount} remotos (ubicación reasignada), ${jobs.length - remoteCount} presenciales (ubicación original).`);
+    console.log(
+      `   📊 ${remoteCount} remotos (ubicación reasignada), ${jobs.length - remoteCount} presenciales (ubicación original).`,
+    );
   } catch (err) {
     console.error("❌ Error durante el seed de la base de datos:", err);
     process.exit(1);
