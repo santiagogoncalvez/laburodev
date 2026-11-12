@@ -167,6 +167,8 @@ button {
 	justify-content: center;
 	width: 2.5rem;
 	height: 2.5rem;
+	/* En filas flex (buscador de inicio) no se achata: ancho = alto siempre */
+	flex-shrink: 0;
 	border-radius: var(--r-full);
 	background-color: transparent;
 	border: none;
@@ -355,6 +357,10 @@ footer {
 	box-shadow: var(--card-shadow);
 	border-radius: var(--r-full);
 	padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+	/* Altura definida única (la del buscador de inicio): los dos buscadores
+	   miden lo mismo aunque la de empleos no lleve el botón "Buscar".
+	   3.5rem = 2×--space-1 + 48px (altura del .btn) */
+	height: 3.5rem;
 }
 
 .search-bar svg {
