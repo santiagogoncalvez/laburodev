@@ -10,6 +10,20 @@ permissions:
   contents: read
 
 jobs:
+  # Lint con Biome desde la raíz (config única del repo: frontend + backend).
+  # Corre en PRs y pushes; gate de los dos deploys via `needs`.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run lint
+
   backend-test:
     runs-on: ubuntu-latest
     env:
@@ -66,7 +80,7 @@ jobs:
         run: docker logs api
 
   deploy-frontend:
-    needs: [frontend-build]
+    needs: [frontend-build, lint]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     concurrency:
@@ -109,7 +123,7 @@ jobs:
           echo "OK → $PRODUCTION_URL"
 
   deploy-backend:
-    needs: [backend-smoke-test]
+    needs: [backend-smoke-test, lint]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     concurrency:

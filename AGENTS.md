@@ -57,7 +57,7 @@ En PowerShell usar `npm.cmd` si la policy de ejecución bloquea `npm` (falla con
 - **Login/register/profile son mock local con Zustand** — no hay backend de auth; no intentar conectarlos.
 - Rutas: `/`, `/search`, `/jobs/:jobId`, `/login`, `/register`, `/profile`.
 - Diseño: leer `frontend/DESIGN-SYSTEM.md` antes de tocar UI (tokens, Bricolage Grotesque 400/500, lucide-react, cero emoji).
-- **Lint con Biome 2.6** (config única en `biome.json` de la raíz; ESLint fue reemplazado): cubre `frontend/src/**` y `backend/**/*.ts` (los `.js` de `ai-e2e/` y configs quedan fuera de scope). Convenciones: frontend comillas simples, backend comillas dobles (override en config), indent de 2 espacios, orden de imports activo (`assist`). `npm run lint` funciona desde frontend o backend (resuelve el binario de la raíz). `typescript-eslint` no se usa porque TS7 todavía no expone API programática (typescript-eslint#10940). CI no corre lint (solo build).
+- **Lint con Biome 2.6** (config única en `biome.json` de la raíz; ESLint fue reemplazado): cubre `frontend/src/**` y `backend/**/*.ts` (los `.js` de `ai-e2e/` y configs quedan fuera de scope). Convenciones: frontend comillas simples, backend comillas dobles (override en config), indent de 2 espacios, orden de imports activo (`assist`). `npm run lint` funciona desde la raíz (chequea todo el repo, 67 archivos) o desde frontend/backend (scope del paquete, resuelve el binario de la raíz). `typescript-eslint` no se usa porque TS7 todavía no expone API programática (typescript-eslint#10940). CI corre lint en el job `lint` (gate de ambos deploys).
 - `@swc/core` en Windows: si reinstalar falla con *"Failed to load native binding"* (permisos DACL del perfil), forzar `@swc/core` a `1.13.5` con `overrides` en `frontend/package.json`.
 
 ## IA — Resumen de empleos (`/ai/summary/:id`)
@@ -107,11 +107,12 @@ Gotchas de Stagehand v4:
 
 `.github/workflows/ci.yml` en push/PR a `main`:
 
-1. `backend-test`: `npm ci` → `npm run db:seed` → `npm run typecheck` → `npm test -- --test-skip-pattern="AI"` con `NODE_ENV: test`.
-2. `frontend-build`: `npm ci` → `npm run build`.
-3. `backend-smoke-test`: `docker build -f backend/Dockerfile.vercel` (el mismo artefacto que Vercel despliega) → corre la imagen en `:3000` → `curl /health` (si falla, imprime `docker logs` del contenedor).
-4. **Deploy solo en push a main** (no en PR), vía Vercel CLI (`vercel pull` + `vercel deploy --prod`) con tokens por proyecto — **no** es deploy de Vercel Git: ambos `vercel.json` tienen `"git": { "deploymentEnabled": false }`.
-5. Smoke test post-deploy: `/` en `laburodev.vercel.app`, `/health` en `laburodev-api.santiagogoncalvez.com`.
+1. `lint`: `npm ci` en la raíz → `npm run lint` (Biome sobre todo el repo). Gate de los dos deploys vía `needs`.
+2. `backend-test`: `npm ci` → `npm run db:seed` → `npm run typecheck` → `npm test -- --test-skip-pattern="AI"` con `NODE_ENV: test`.
+3. `frontend-build`: `npm ci` → `npm run build`.
+4. `backend-smoke-test`: `docker build -f backend/Dockerfile.vercel` (el mismo artefacto que Vercel despliega) → corre la imagen en `:3000` → `curl /health` (si falla, imprime `docker logs` del contenedor).
+5. **Deploy solo en push a main** (no en PR), vía Vercel CLI (`vercel pull` + `vercel deploy --prod`) con tokens por proyecto — **no** es deploy de Vercel Git: ambos `vercel.json` tienen `"git": { "deploymentEnabled": false }`.
+6. Smoke test post-deploy: `/` en `laburodev.vercel.app`, `/health` en `laburodev-api.santiagogoncalvez.com`.
 
 Dos projects separados, uno por paquete (rootDirectory configurado en cada project de Vercel).
 
