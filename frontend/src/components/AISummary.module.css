@@ -31,7 +31,8 @@
 }
 
 .generate {
-	width: 100%;
+	/* Ancho adaptativo al contenido (icono + label), no al contenedor */
+	width: fit-content;
 	display: flex;
 	align-items: center;
 	justify-content: center;
