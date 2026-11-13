@@ -1,13 +1,5 @@
 import DOMPurify from 'dompurify';
-import {
-  Building2,
-  CalendarDays,
-  Heart,
-  Home,
-  MapPin,
-  Signal,
-  Wifi,
-} from 'lucide-react';
+import { Building2, Heart, Home, MapPin, Signal, Wifi } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import snarkdown from 'snarkdown';
@@ -95,12 +87,6 @@ function DetailPageHeader({ job }: DetailPageHeaderProps) {
           <Signal size={14} aria-hidden="true" />
           {formatJobLevel(job.data.level)}
         </span>
-        {job.createdAt && (
-          <span className="meta-item">
-            <CalendarDays size={14} aria-hidden="true" />
-            Publicado: {new Date(job.createdAt).toLocaleDateString('es-AR')}
-          </span>
-        )}
       </div>
       {job.data.technology.length > 0 && (
         <div className="badges">
@@ -110,6 +96,11 @@ function DetailPageHeader({ job }: DetailPageHeaderProps) {
             </span>
           ))}
         </div>
+      )}
+      {job.createdAt && (
+        <span className={styles.createdAt}>
+          Publicado: {new Date(job.createdAt).toLocaleDateString('es-AR')}
+        </span>
       )}
     </header>
   );
