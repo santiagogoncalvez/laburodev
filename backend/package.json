@@ -11,7 +11,8 @@
     "lint": "biome check .",
     "test": "node --import tsx --test",
     "db:seed": "tsx db/seed.ts",
-    "db:reset": "tsx db/seed.ts --reset"
+    "db:reset": "tsx db/seed.ts --reset",
+    "db:seed:prod": "tsx db/seed-prod.ts"
   },
   "keywords": [],
   "author": "",

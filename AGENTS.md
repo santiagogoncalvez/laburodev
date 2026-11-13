@@ -10,7 +10,7 @@ Toda la documentación, planes de trabajo, notas de arquitectura y entregables d
 - **Paquetes independientes**: `frontend/` y `backend/` son hermanos, sin npm workspaces. Cada uno tiene su `package.json`, su lockfile y su `node_modules`.
 - `frontend/` — Vite + React 19 + SWC + Zustand + React Router v7 + Streamdown. Entry: `src/main.tsx` → `src/App.tsx`. **100% TypeScript** (`npm run typecheck` = `tsc -b`, también corre en CI vía `build`).
 - `backend/` — Express 5 + **TypeScript** + Zod + Vercel AI SDK (`ai`, `@ai-sdk/google`). Entry: `app.ts` (`npm run build` → `dist/`). Capas: `routes/` → `controllers/` → `services/` → `models/` → `db/`.
-- **Persistencia**: Turso (libSQL) vía `@libsql/client`. Sin `TURSO_DATABASE_URL` cae a SQLite local (`file:local.db`). `jobs.json` ya no es la fuente de datos de la API: es el dataset de origen del seed.
+- **Persistencia**: Turso (libSQL) vía `@libsql/client`. Sin `TURSO_DATABASE_URL` cae a SQLite local (`file:local.db`). `jobs.json` ya no es la fuente de datos de la API: es el dataset de origen del seed. Credenciales de prod en `backend/.env` con sufijo `_PROD` (`TURSO_DATABASE_URL_PROD` / `TURSO_AUTH_TOKEN_PROD`): nunca se cargan solas; re-seedear prod con `npm run db:seed:prod`.
 
 ## Comandos
 
@@ -24,6 +24,7 @@ npm run lint           # biome check . (Biome — config única en biome.json de
 npm test               # node --import tsx --test (corre TODOS los *.test.js; tsx resuelve los .ts) — ver gotcha abajo
 npm run db:seed        # tsx db/seed.ts — crea esquema + importa jobs.json (correr antes que los tests si la DB está vacía)
 npm run db:reset       # dropea la tabla y vuelve a seedear
+npm run db:seed:prod   # seed contra Turso PROD — inyecta TURSO_*_PROD del .env como TURSO_* antes de correr el seed
 
 # Docker (desde laburodev/backend/)
 docker build -f Dockerfile.vercel -t laburodev-api . # imagen que usan CI y Vercel (build tsc + CMD node dist/server.js, ENV NODE_ENV=production)
