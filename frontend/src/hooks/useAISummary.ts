@@ -6,7 +6,7 @@ export function useAISummary(jobId: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Stream activo: se aborta al regenerar, cambiar de empleo o desmontar
+  // Stream activo: se aborta al cambiar de empleo o desmontar
   const controllerRef = useRef<AbortController | null>(null);
   // "¿Es el primer chunk?" se decide FUERA del updater (updaters deben ser puros)
   const firstChunkRef = useRef(true);

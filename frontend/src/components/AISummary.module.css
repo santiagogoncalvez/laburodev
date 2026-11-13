@@ -24,9 +24,8 @@
 	color: var(--accent);
 }
 
-/* Icono dentro de botones hereda color del botón */
-.generate .icon,
-.regenerate .icon {
+/* Icono dentro de botón hereda color del botón */
+.generate .icon {
 	color: currentColor;
 }
 
@@ -54,33 +53,6 @@
 }
 
 .generate:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.regenerate {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--space-2);
-	padding: 0.45rem 0.95rem;
-	background: transparent;
-	color: var(--accent);
-	border: 1px solid var(--accent);
-	border-radius: var(--r-full);
-	font-size: var(--fs-small);
-	font-weight: 500;
-	cursor: pointer;
-	transition:
-		background 0.15s,
-		color 0.15s;
-}
-
-.regenerate:hover:not(:disabled) {
-	background: var(--accent);
-	color: var(--accent-ink);
-}
-
-.regenerate:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }

@@ -40,25 +40,6 @@ function AISummary({ jobId }: AISummaryProps) {
             <Sparkles className={styles.icon} aria-hidden="true" />
             Resumen generado por IA
           </h2>
-          <button
-            type="button"
-            onClick={generateSummary}
-            disabled={loading}
-            className={styles.regenerate}
-            aria-label="Regenerar resumen"
-          >
-            {loading ? (
-              <>
-                <Loader2 className={styles.spinner} aria-hidden="true" />
-                Regenerando...
-              </>
-            ) : (
-              <>
-                <Sparkles className={styles.icon} aria-hidden="true" />
-                Regenerar
-              </>
-            )}
-          </button>
         </header>
 
         <div className={styles.content}>
