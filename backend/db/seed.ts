@@ -76,14 +76,12 @@ async function seed() {
           ? [job.data.technology]
           : [];
 
-      // jobs.json está normalizado: ubicación = país o "Remoto". La modalidad
-      // se deriva de ella: "Remoto" → remoto, país → presencial.
-      const originalLocation = job.location || "";
-      const isRemote = originalLocation.toLowerCase() === "remoto";
-      const modality = isRemote ? "remoto" : "presencial";
-      const location = originalLocation;
+      // jobs.json está normalizado: la ubicación SIEMPRE es un país. La
+      // modalidad sale de data.mode ("remoto" → remoto, resto → presencial).
+      const location = job.location || "";
+      const modality = job.data.mode === "remoto" ? "remoto" : "presencial";
 
-      if (isRemote) remoteCount++;
+      if (modality === "remoto") remoteCount++;
 
       await db.execute({
         sql: `

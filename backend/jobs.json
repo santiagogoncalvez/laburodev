@@ -3,7 +3,7 @@
     "id": "7a4d1d8b-1e45-4d8c-9f1a-8c2f9a9121a4",
     "title": "Desarrollador de Software Senior",
     "company": "Tech Solutions Inc.",
-    "location": "Remoto",
+    "location": "Argentina",
     "description": "Buscamos un ingeniero de software con experiencia en desarrollo web y conocimientos en JavaScript, React y Node.js. El candidato ideal debe ser capaz de trabajar en equipo y tener buenas habilidades de comunicación.",
     "data": {
       "technology": [
@@ -71,7 +71,7 @@
     "id": "f62d8a34-923a-4ac2-9b0b-14e0ac2f5405",
     "title": "Ingeniero de DevOps",
     "company": "Cloud Services SA",
-    "location": "Remoto",
+    "location": "Chile",
     "description": "Estamos buscando un ingeniero de DevOps con experiencia en la gestión de infraestructuras en la nube, automatización de procesos y herramientas de integración continua. Se requiere conocimiento en AWS, Azure o GCP.",
     "data": {
       "technology": [
@@ -142,7 +142,7 @@
     "id": "bb8f2a99-6a20-4f9e-912a-16f54a49b8c3",
     "title": "Especialista en Ciberseguridad",
     "company": "SafeNet Solutions",
-    "location": "Remoto",
+    "location": "Colombia",
     "description": "Buscamos un especialista en ciberseguridad con conocimientos en protección de infraestructuras, análisis de vulnerabilidades y respuesta ante incidentes. Se valorará experiencia con SIEM y certificaciones de seguridad.",
     "data": {
       "technology": [
@@ -235,7 +235,7 @@
     "id": "b65a3c9f-b174-4d86-b8a2-9cf9b1e13a22",
     "title": "Ingeniero de Machine Learning",
     "company": "AI Labs",
-    "location": "Remoto",
+    "location": "España",
     "description": "Buscamos un ingeniero de machine learning con experiencia en modelos de predicción y procesamiento de datos. Se valorará conocimiento en TensorFlow, PyTorch y MLOps.",
     "data": {
       "technology": [
@@ -354,7 +354,7 @@
     "id": "b3c8e9f2-7d41-4e92-a8b3-2f5c6d8e9a1b",
     "title": "Full Stack Developer",
     "company": "WebDev Masters",
-    "location": "Remoto",
+    "location": "México",
     "description": "Se busca desarrollador full stack con dominio de tecnologías frontend y backend. Experiencia con React, Node.js, PostgreSQL y Docker es esencial.",
     "data": {
       "technology": [
@@ -425,7 +425,7 @@
     "id": "e6f1b2c5-0a74-6b15-d1e6-5i8f9a1b2d4e",
     "title": "Cloud Architect",
     "company": "CloudNative Corp",
-    "location": "Remoto",
+    "location": "Perú",
     "description": "Arquitecto cloud senior con expertise en diseño de soluciones escalables en AWS, Azure o GCP. Certificaciones cloud altamente valoradas.",
     "data": {
       "technology": [
@@ -495,7 +495,7 @@
     "id": "h9i4e5f8-3d07-9e48-g4h9-8l1c2d4e5g7h",
     "title": "Penetration Tester",
     "company": "SecureIT Labs",
-    "location": "Remoto",
+    "location": "Argentina",
     "description": "Especialista en pentesting para evaluar seguridad de aplicaciones web, móviles e infraestructura. Certificaciones OSCP o CEH deseables.",
     "data": {
       "technology": [
@@ -589,7 +589,7 @@
     "id": "l3m8i9j2-7h41-3i82-k8l3-2p5g6h8i9k1l",
     "title": "AI Research Scientist",
     "company": "DeepLearning Labs",
-    "location": "Remoto",
+    "location": "Chile",
     "description": "Científico investigador en IA para desarrollar modelos de deep learning. PhD o Máster en IA/ML requerido. Publicaciones en conferencias valoradas.",
     "data": {
       "technology": [
@@ -707,7 +707,7 @@
     "id": "q8r3n4o7-2m96-8n37-p3q8-7u0l1m3n4p6q",
     "title": "Blockchain Developer",
     "company": "CryptoTech Innovations",
-    "location": "Remoto",
+    "location": "Colombia",
     "description": "Desarrollador blockchain para crear smart contracts y dApps. Experiencia con Solidity, Ethereum, Web3.js y frameworks como Hardhat o Truffle.",
     "data": {
       "technology": [
@@ -778,7 +778,7 @@
     "id": "t1u6q7r0-5p29-1q60-s6t1-0x3o4p6q7s9t",
     "title": "Technical Writer",
     "company": "DocuTech Solutions",
-    "location": "Remoto",
+    "location": "España",
     "description": "Redactor técnico para crear documentación de APIs, guías de usuario y tutoriales. Background técnico en desarrollo de software valorado.",
     "data": {
       "technology": [
@@ -801,7 +801,7 @@
     "id": "eca7dae1-bf6b-4d1f-bf91-78047da1a0ba",
     "title": "Desarrollador Frontend React",
     "company": "Nubatech",
-    "location": "Remoto",
+    "location": "México",
     "description": "Buscamos frontend con 3 años en React para nuestro panel de pagos. Trabajo remoto con equipo en LATAM.",
     "data": {
       "technology": [
@@ -843,7 +843,7 @@
     "id": "75585fb5-a1d6-4070-89f0-2feff324986c",
     "title": "Data Analyst",
     "company": "Pampa Digital",
-    "location": "Remoto",
+    "location": "Perú",
     "description": "Analista de datos para e-commerce: tableros, cohortes y experimentos A/B.",
     "data": {
       "technology": [
@@ -883,7 +883,7 @@
     "id": "f6b0a30f-176f-4efa-bf10-73b67be1d09e",
     "title": "DevOps Engineer",
     "company": "NubeSur",
-    "location": "Remoto",
+    "location": "Argentina",
     "description": "DevOps para plataforma multi-tenant en AWS: Terraform, EKS y observabilidad.",
     "data": {
       "technology": [
@@ -925,7 +925,7 @@
     "id": "da0a12ca-14f9-4ba3-a879-fb8aaae66d7d",
     "title": "QA Automation",
     "company": "QualityLab",
-    "location": "Remoto",
+    "location": "Chile",
     "description": "QA automation para suite de 800 tests en Cypress y Playwright.",
     "data": {
       "technology": [
@@ -946,7 +946,7 @@
     "id": "3364dd19-c4b6-4576-bb4b-4703274aa305",
     "title": "Machine Learning Engineer",
     "company": "AgroIA",
-    "location": "Remoto",
+    "location": "Colombia",
     "description": "Modelos de visión para estimación de rindes. Stack Python, PyTorch y datos satelitales.",
     "data": {
       "technology": [
@@ -1008,7 +1008,7 @@
     "id": "8579a366-da8b-40f3-a90b-a0dafe01d2c2",
     "title": "Frontend Junior",
     "company": "Chacra Tech",
-    "location": "Remoto",
+    "location": "España",
     "description": "Primer empleo IT: maquetado y componentes con React, con revisión de código diaria.",
     "data": {
       "technology": [
@@ -1029,7 +1029,7 @@
     "id": "9de67cc6-c9c7-411d-97a2-7df8703d4a7d",
     "title": "Data Engineer",
     "company": "Minería Datos SA",
-    "location": "Remoto",
+    "location": "México",
     "description": "Pipelines batch y streaming para minería. Remoto con viajes a faena.",
     "data": {
       "technology": [
@@ -1050,7 +1050,7 @@
     "id": "4bdbe95f-b009-4124-bc47-9735fb536b69",
     "title": "Desarrollador Ruby on Rails",
     "company": "OficinaVirtual",
-    "location": "Remoto",
+    "location": "Perú",
     "description": "SaaS de gestión documental en Rails 7. Equipo chico, decisiones rápidas.",
     "data": {
       "technology": [
@@ -1112,7 +1112,7 @@
     "id": "3279ffb1-2371-4965-af31-66e5298467ae",
     "title": "Diseñador UI que programa",
     "company": "Estudio Pampa",
-    "location": "Remoto",
+    "location": "Argentina",
     "description": "Perfil híbrido: diseño en Figma y front en React para sitios institucionales.",
     "data": {
       "technology": [
@@ -1133,7 +1133,7 @@
     "id": "bebaf27c-0cd6-49ba-b28a-eb55ccb6a7a8",
     "title": "SRE",
     "company": "PagosYa",
-    "location": "Remoto",
+    "location": "Chile",
     "description": "Confiabilidad de pagos: error budgets, incident review sin culpas.",
     "data": {
       "technology": [
@@ -1154,7 +1154,7 @@
     "id": "af8fbdc1-216a-4412-9c20-0156b256bd77",
     "title": "Desarrollador WordPress",
     "company": "Medios del Sur",
-    "location": "Remoto",
+    "location": "Colombia",
     "description": "Portales de noticias en WordPress VIP: performance y Gutenberg.",
     "data": {
       "technology": [
@@ -1195,7 +1195,7 @@
     "id": "06e60e50-ab3a-443a-b49b-3dea8ac48f63",
     "title": "CTO",
     "company": "Semilla Startup",
-    "location": "Remoto",
+    "location": "España",
     "description": "Primer hire técnico: definir stack y contratar. Equity importante.",
     "data": {
       "technology": [
@@ -1257,7 +1257,7 @@
     "id": "6e46f86c-8508-4c7f-bd63-61873f5c5b58",
     "title": "Product Engineer",
     "company": "TurnosWeb",
-    "location": "Remoto",
+    "location": "México",
     "description": "Fullstack con mentalidad de producto: discovery y delivery.",
     "data": {
       "technology": [

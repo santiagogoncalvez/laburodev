@@ -167,6 +167,7 @@ describe("GET /jobs/options", () => {
       const options = await response.json();
       assert.ok(Array.isArray(options.technologies) && options.technologies.length > 0, "tecnologías");
       assert.ok(Array.isArray(options.locations) && options.locations.length > 0, "ubicaciones");
+      assert.ok(!options.locations.includes("Remoto"), "Remoto ya no es ubicación");
       assert.ok(Array.isArray(options.levels) && options.levels.includes("senior"), "niveles");
       assert.strictEqual(new Set(options.locations).size, options.locations.length, "sin duplicados");
    });
@@ -181,10 +182,10 @@ describe("Filtros exactos", () => {
       assert.ok(js.data.length > 0, "javascript sí debe devolver resultados");
    });
 
-   test("location=Remoto solo debe devolver Remoto", async () => {
-      const json = await (await fetch(`${BASE_URL}/jobs?location=Remoto&limit=50`)).json();
-      assert.ok(json.data.length > 0, "Remoto debe devolver resultados");
-      assert.ok(json.data.every((job) => job.location === "Remoto"));
+   test("location=Argentina solo debe devolver Argentina", async () => {
+      const json = await (await fetch(`${BASE_URL}/jobs?location=Argentina&limit=50`)).json();
+      assert.ok(json.data.length > 0, "Argentina debe devolver resultados");
+      assert.ok(json.data.every((job) => job.location === "Argentina"));
    });
 });
 
