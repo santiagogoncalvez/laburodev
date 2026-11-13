@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, development]
   pull_request:
-    branches: [main]
+    branches: [main, development]
 
 permissions:
   contents: read
@@ -81,7 +81,7 @@ jobs:
 
   deploy-frontend:
     needs: [frontend-build, lint]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-frontend
@@ -124,7 +124,7 @@ jobs:
 
   deploy-backend:
     needs: [backend-smoke-test, lint]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-backend
