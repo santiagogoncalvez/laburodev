@@ -122,6 +122,56 @@ jobs:
           echo ""
           echo "OK → $PRODUCTION_URL"
 
+  preview-frontend:
+    needs: [frontend-build, lint]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/development'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: preview-frontend
+      cancel-in-progress: true
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Vincular proyecto (entorno preview)
+        run: vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
+      - name: Deploy a preview
+        run: vercel deploy --token=$VERCEL_TOKEN | tee /tmp/preview-url.txt
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
+      - name: Mostrar URL de preview
+        run: echo "Preview URL: $(tail -1 /tmp/preview-url.txt)"
+
+  preview-backend:
+    needs: [backend-smoke-test, lint]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/development'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: preview-backend
+      cancel-in-progress: true
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Vincular proyecto (entorno preview)
+        run: vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_BACKEND }}
+      - name: Deploy a preview
+        run: vercel deploy --token=$VERCEL_TOKEN | tee /tmp/preview-url.txt
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_BACKEND }}
+      - name: Mostrar URL de preview
+        run: echo "Preview URL: $(tail -1 /tmp/preview-url.txt)"
+
   deploy-backend:
     needs: [backend-smoke-test, lint]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
