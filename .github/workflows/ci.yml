@@ -141,7 +141,11 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
       - name: Deploy a preview
-        run: vercel deploy --alias=laburodev-dev.vercel.app --token=$VERCEL_TOKEN | tee /tmp/preview-url.txt
+        run: |
+          set -o pipefail
+          vercel deploy --token=$VERCEL_TOKEN | tee /tmp/preview-url.txt
+          DEPLOY_URL=$(tail -1 /tmp/preview-url.txt)
+          vercel alias set "$DEPLOY_URL" laburodev-dev.vercel.app --token=$VERCEL_TOKEN
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
       - name: Mostrar URL de preview
@@ -166,7 +170,11 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_BACKEND }}
       - name: Deploy a preview
-        run: vercel deploy --alias=laburodev-api-dev.vercel.app --token=$VERCEL_TOKEN | tee /tmp/preview-url.txt
+        run: |
+          set -o pipefail
+          vercel deploy --token=$VERCEL_TOKEN | tee /tmp/preview-url.txt
+          DEPLOY_URL=$(tail -1 /tmp/preview-url.txt)
+          vercel alias set "$DEPLOY_URL" laburodev-api-dev.vercel.app --token=$VERCEL_TOKEN
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_BACKEND }}
       - name: Mostrar URL de preview
