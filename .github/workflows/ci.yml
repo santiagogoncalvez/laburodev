@@ -141,11 +141,11 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
       - name: Deploy a preview
-        run: vercel deploy --token=$VERCEL_TOKEN | tee /tmp/preview-url.txt
+        run: vercel deploy --alias=laburodev-dev.vercel.app --token=$VERCEL_TOKEN | tee /tmp/preview-url.txt
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
       - name: Mostrar URL de preview
-        run: echo "Preview URL => $(tail -1 /tmp/preview-url.txt)"
+        run: echo "Preview URL => https://laburodev-dev.vercel.app"
 
   preview-backend:
     needs: [backend-smoke-test, lint]
@@ -166,11 +166,11 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_BACKEND }}
       - name: Deploy a preview
-        run: vercel deploy --token=$VERCEL_TOKEN | tee /tmp/preview-url.txt
+        run: vercel deploy --alias=laburodev-api-dev.vercel.app --token=$VERCEL_TOKEN | tee /tmp/preview-url.txt
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_BACKEND }}
       - name: Mostrar URL de preview
-        run: echo "Preview URL => $(tail -1 /tmp/preview-url.txt)"
+        run: echo "Preview URL => https://laburodev-api-dev.vercel.app"
 
   deploy-backend:
     needs: [backend-smoke-test, lint]
