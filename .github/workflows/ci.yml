@@ -148,7 +148,10 @@ jobs:
           DEPLOY_URL=$(jq -r '.url' /tmp/deploy.json)
           echo "Deployment ID: $DEPLOY_ID"
           echo "Deployment URL: $DEPLOY_URL"
-          vercel alias set "$DEPLOY_ID" laburodev-dev.vercel.app --token=$VERCEL_TOKEN
+          curl -s -X POST "https://api.vercel.com/v2/deployments/$DEPLOY_ID/aliases" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"alias\": \"laburodev-dev.vercel.app\"}"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_FRONTEND }}
       - name: Mostrar URL de preview
@@ -180,7 +183,10 @@ jobs:
           DEPLOY_URL=$(jq -r '.url' /tmp/deploy.json)
           echo "Deployment ID: $DEPLOY_ID"
           echo "Deployment URL: $DEPLOY_URL"
-          vercel alias set "$DEPLOY_ID" laburodev-api-dev.vercel.app --token=$VERCEL_TOKEN
+          curl -s -X POST "https://api.vercel.com/v2/deployments/$DEPLOY_ID/aliases" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"alias\": \"laburodev-api-dev.vercel.app\"}"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_BACKEND }}
       - name: Mostrar URL de preview
