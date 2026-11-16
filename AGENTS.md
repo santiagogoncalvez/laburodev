@@ -5,6 +5,11 @@ Bolsa de trabajos para desarrolladores. Frontend (React + Vite) y API (Express 5
 ## Regla de Oro para Agentes
 Toda la documentación, planes de trabajo, notas de arquitectura y entregables deben crearse **estrictamente dentro de la carpeta raíz del proyecto (`C:\Users\music\Documents\Programacion\fullstack-projects\laburodev`)**. NO usar directorios externos para archivos relacionados con el desarrollo o la planificación.
 
+## Flujo de trabajo — ramas y deploys (obligatorio)
+
+- **Siempre se trabaja en `development`**: los commits van a esa rama y el push a `origin/development` despliega preview (`laburodev-dev.vercel.app` + `laburodev-api-dev.vercel.app`). Referencia completa: `FLUJO-TRABAJO.md`.
+- **`main` / producción NO se toca por cuenta propia**: solo cuando Santiago lo dice explícitamente, después de probar en desarrollo local y en preview remoto. Recién ahí se mergea `development` → `main` y se pushea.
+
 ## Estructura
 
 - **Paquetes independientes**: `frontend/` y `backend/` son hermanos, sin npm workspaces. Cada uno tiene su `package.json`, su lockfile y su `node_modules`.
@@ -47,6 +52,8 @@ En PowerShell usar `npm.cmd` si la policy de ejecución bloquea `npm` (falla con
 - **Siempre correr con `NODE_ENV=test`**: `app.ts` hace `listen()` cuando NODE_ENV no es `test`/`production` y el proceso **queda colgado** después de los tests. En PowerShell: `$env:NODE_ENV='test'; npm.cmd test`.
 - **Gotcha `NODE_ENV` en contenedores** (clave, verificado): `Dockerfile.vercel` setea `ENV NODE_ENV=production` y arranca `dist/server.js`, que **siempre hace `listen()`** (es el entrypoint para Vercel). Pero `app.ts` también escucha si `NODE_ENV` no es `production`/`test`: si corrés con `--env-file .env` y tu `.env` tiene `NODE_ENV=development`, ese valor **pisa** el de la imagen → doble `listen()` → crash `EADDRINUSE`. Solución: `-e NODE_ENV=production` en el `docker run` (el flag CLI gana sobre `--env-file`). En tests nativos pasa al revés: se necesita `NODE_ENV=test` para que `app.ts` NO escuche (el test levanta su server en `:3001`).
 - La suite depende de datos sembrados (`GET /jobs` espera filas): correr `npm run db:seed` si la DB está recién creada.
+- **Suite en serie**: `npm test` usa `--test-concurrency=1`. Los archivos de test comparten `local.db`; en paralelo se bloqueaban por locks de SQLite y el run colgaba.
+- `favorites.test.js` (puerto 3002) usa el usuario fijo `favoritos-test@laburodev.dev` y lo limpia en `before`/`after` (idempotente).
 - Los tests de IA (suite `[AI]`) llaman a Gemini real con `GOOGLE_GENERATIVE_AI_API_KEY` del `.env`. CI los salta con `npm test -- --test-skip-pattern="AI"`.
 - El server de tests corre en `:3001` (importa `app.ts`, que no escucha bajo `NODE_ENV=test`, y lo levanta el `before()` del test).
 - `.env` se carga con `process.loadEnvFile()` en `app.ts` antes de importar config (sin dotenv). No pisa vars ya existentes en el entorno.
@@ -55,7 +62,7 @@ En PowerShell usar `npm.cmd` si la policy de ejecución bloquea `npm` (falla con
 ## Frontend
 
 - **La URL manda** el estado de búsqueda y filtros (`useSearchParams`): los efectos solo leen la URL, nunca la escriben; la escritura pasa solo por handlers (`Search.jsx`).
-- **Login/register/profile son mock local con Zustand** — no hay backend de auth; no intentar conectarlos.
+- **Auth real con Better Auth (Fase 1)**: cliente en `src/lib/auth-client.ts`, sesión con `useSession`, favoritos sincronizados con el server (ver sección "Auth"). El mock `authStore` fue eliminado.
 - Rutas: `/`, `/search`, `/jobs/:jobId`, `/login`, `/register`, `/profile`.
 - Diseño: leer `frontend/DESIGN-SYSTEM.md` antes de tocar UI (tokens, Bricolage Grotesque 400/500, lucide-react, cero emoji).
 - **Lint con Biome 2.6** (config única en `biome.json` de la raíz; ESLint fue reemplazado): cubre `frontend/src/**` y `backend/**/*.ts` (los `.js` de `ai-e2e/` y configs quedan fuera de scope). Convenciones: frontend comillas simples, backend comillas dobles (override en config), indent de 2 espacios, orden de imports activo (`assist`). `npm run lint` funciona desde la raíz (chequea todo el repo, 67 archivos) o desde frontend/backend (scope del paquete, resuelve el binario de la raíz). `typescript-eslint` no se usa porque TS7 todavía no expone API programática (typescript-eslint#10940). CI corre lint en el job `lint` (gate de ambos deploys).
@@ -87,7 +94,19 @@ Frontend:
 
 - `POST/PUT/PATCH/DELETE /jobs` exigen header `x-api-key` igual a la env `WRITE_API_KEY` (`middlewares/writeGuard.ts`, comparación timing-safe).
 - **Fail-closed**: sin `WRITE_API_KEY` configurada, las escrituras responden 503. En Vercel hay que agregarla en env vars del proyecto; en local vive en `backend/.env` (ver `.env.example`).
-- Guard **temporal** hasta que exista auth real (roadmap #2). GET (`/jobs`, `/jobs/:id`, `/health`, `/ai/*`) sigue abierto.
+- Guard **temporal** hasta la Fase 2 (roles sobre el CRUD). GET (`/jobs`, `/jobs/:id`, `/health`, `/ai/*`) sigue abierto.
+
+## Auth — Better Auth (Fase 1)
+
+Email+password sin verificación de email y sin roles (Fase 2). Misma DB que el CRUD (Turso/SQLite) vía Kysely + `@libsql/kysely-libsql` compartiendo `dbConfig` de `db/index.ts`.
+
+- **Backend**: `auth.ts` (config: `emailAndPassword.enabled`, `trustedOrigins` = allow-list de CORS). En `app.ts`: `app.all("/api/auth/*splat", toNodeHandler(auth))` montado **antes** de `express.json()` (Better Auth lee el body del stream crudo; Express 5 usa `*splat`).
+- **Rutas protegidas**: `/api/favorites` (GET/POST/DELETE). `middlewares/session.ts` expone `getSessionUserId(req) → string | null`; cada handler responde 401 si es null. No hay middleware con `req.userId` (evita tipos que mienten).
+- **Esquema**: `db/schema.sql` incluye `user`, `session`, `account`, `verification` (salidos de `getMigrations()` de Better Auth — camelCase y entre comillas; NO regenerar a mano sin correr better-auth, el runtime valida las columnas) + `favorites (id, user_id, job_id, created_at, UNIQUE(user_id, job_id))`. El seed normal (`db:seed` / `db:seed:prod`) los crea con `IF NOT EXISTS`.
+- **Env**: `BETTER_AUTH_SECRET` (con `NODE_ENV=production` falta → lanza error al arrancar) y `BETTER_AUTH_URL`. **Vercel: agregar ambas** antes del deploy (en CI se usa un dummy).
+- **Frontend (mismo origen — obligatorio por cookies)**: Vite proxy `/api` → `:3000` en dev; `vercel.json` rewrite `/api/:path*` → API **primero** en la lista. Jobs/IA siguen con `API_URL` absoluta + CORS (sin credentials).
+- **Favoritos**: `favoritesStore` sigue en localStorage (clave `laburodev-favorites`) + flag `loggedIn`. `useFavoritesSync` (llamado en `App.tsx`) hace **merge local ∪ servidor** al iniciar sesión y sube los del invitado; el toggle empuja al server solo con sesión (optimista, el merge corrige). Al cerrar sesión se limpia el local.
+- **Perfil**: muestra datos reales de la sesión; las secciones demo (experiencia/habilidades) se quitaron.
 
 ## Tests con agente (`frontend/ai-e2e/`)
 
