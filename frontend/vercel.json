@@ -1,5 +1,6 @@
 {
    "rewrites": [
+      { "source": "/api/:path*", "has": [{ "type": "host", "value": "laburodev-dev.vercel.app" }], "destination": "https://laburodev-api-dev.vercel.app/api/:path*" },
       { "source": "/api/:path*", "destination": "https://laburodev-api.santiagogoncalvez.com/api/:path*" },
       { "source": "/", "destination": "/" },
       { "source": "/search", "destination": "/" },
