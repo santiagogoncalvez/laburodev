@@ -1,26 +1,44 @@
-import { type FormEvent, useId } from 'react';
+import { type FormEvent, useId, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useAuthStore } from '@/store/authStore';
+import { authClient } from '@/lib/auth-client';
 import styles from './Auth.module.css';
 
+// Códigos de Better Auth → mensajes en español
+const ERROR_MESSAGES: Record<string, string> = {
+  INVALID_EMAIL_OR_PASSWORD: 'Email o contraseña incorrectos',
+  INVALID_EMAIL: 'Email inválido',
+  WEAK_PASSWORD: 'La contraseña debe tener al menos 8 caracteres',
+};
+
 export default function Login() {
-  const { login } = useAuthStore();
   const navigate = useNavigate();
   const passwordId = useId();
   const emailId = useId();
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get(emailId);
-    const password = formData.get(passwordId);
+    const email = String(formData.get(emailId) ?? '');
+    const password = String(formData.get(passwordId) ?? '');
 
-    // Mock login - en una app real, harías una petición a la API
-    if (email && password) {
-      login();
-      navigate('/search');
+    setSubmitting(true);
+    const { error: signInError } = await authClient.signIn.email({
+      email,
+      password,
+    });
+    setSubmitting(false);
+
+    if (signInError) {
+      const code = signInError.code ?? '';
+      setError(ERROR_MESSAGES[code] ?? 'No se pudo iniciar sesión');
+      return;
     }
+
+    navigate('/search');
   };
 
   return (
@@ -61,8 +79,18 @@ export default function Login() {
             />
           </div>
 
-          <button type="submit" className={styles.submitButton}>
-            Iniciar Sesión
+          {error && (
+            <p className={styles.error} role="alert">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={submitting}
+          >
+            {submitting ? 'Entrando…' : 'Iniciar Sesión'}
           </button>
         </form>
 

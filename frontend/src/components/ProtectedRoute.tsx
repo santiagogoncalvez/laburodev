@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router';
-import { useAuthStore } from '@/store/authStore';
+import { RouteFallback } from '@/components/RouteFallback';
+import { useSession } from '@/lib/auth-client';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -11,9 +12,12 @@ export function ProtectedRoute({
   children,
   redirectTo = '/login',
 }: ProtectedRouteProps) {
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { data, isPending } = useSession();
 
-  if (!isLoggedIn) {
+  // Cargando la sesión: no redirigimos todavía (evita el flash a /login).
+  if (isPending) return <RouteFallback />;
+
+  if (!data) {
     return <Navigate to={redirectTo} replace />;
   }
 

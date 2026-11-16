@@ -22,4 +22,11 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  // /api va a la API local: mismo origen en dev (cookies de sesión),
+  // igual que en prod donde Vercel hace el rewrite.
+  server: {
+    proxy: {
+      '/api': 'http://localhost:3000',
+    },
+  },
 })

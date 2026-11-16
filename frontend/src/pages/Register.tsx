@@ -1,29 +1,48 @@
-import { type FormEvent, useId } from 'react';
+import { type FormEvent, useId, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useAuthStore } from '@/store/authStore';
+import { authClient } from '@/lib/auth-client';
 import styles from './Auth.module.css';
 
+// Códigos de Better Auth → mensajes en español
+const ERROR_MESSAGES: Record<string, string> = {
+  USER_ALREADY_EXISTS: 'Ya existe una cuenta con ese email',
+  INVALID_EMAIL: 'Email inválido',
+  WEAK_PASSWORD: 'La contraseña debe tener al menos 8 caracteres',
+};
+
 export default function Register() {
-  const nameId = useId();
   const emailId = useId();
   const passwordId = useId();
 
-  const { login } = useAuthStore();
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
 
     const formData = new FormData(e.currentTarget);
-    const name = formData.get(nameId);
-    const email = formData.get(emailId);
-    const password = formData.get(passwordId);
+    const email = String(formData.get(emailId) ?? '');
+    const password = String(formData.get(passwordId) ?? '');
 
-    // Mock register - en una app real, harías una petición a la API
-    if (name && email && password) {
-      login();
-      navigate('/search');
+    setSubmitting(true);
+    const { error: signUpError } = await authClient.signUp.email({
+      // Better Auth exige un name en el alta: se deriva del email y el
+      // usuario lo completa desde el perfil cuando quiera.
+      name: email.split('@')[0],
+      email,
+      password,
+    });
+    setSubmitting(false);
+
+    if (signUpError) {
+      const code = signUpError.code ?? '';
+      setError(ERROR_MESSAGES[code] ?? 'No se pudo crear la cuenta');
+      return;
     }
+
+    navigate('/search');
   };
 
   return (
@@ -37,26 +56,13 @@ export default function Register() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
-            <label htmlFor={nameId} className={styles.label}>
-              Nombre completo
-            </label>
-            <input
-              id={nameId}
-              name={nameId}
-              type="text"
-              className={styles.input}
-              placeholder="Juan Pérez"
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
             <label htmlFor={emailId} className={styles.label}>
               Email
             </label>
             <input
               id={emailId}
-              name={emailId}
               type="email"
+              name={emailId}
               className={styles.input}
               placeholder="tu@email.com"
               required
@@ -73,12 +79,23 @@ export default function Register() {
               type="password"
               className={styles.input}
               placeholder="••••••••"
+              minLength={8}
               required
             />
           </div>
 
-          <button type="submit" className={styles.submitButton}>
-            Crear Cuenta
+          {error && (
+            <p className={styles.error} role="alert">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={submitting}
+          >
+            {submitting ? 'Creando…' : 'Crear Cuenta'}
           </button>
         </form>
 

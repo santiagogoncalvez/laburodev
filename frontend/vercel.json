@@ -1,5 +1,6 @@
 {
    "rewrites": [
+      { "source": "/api/:path*", "destination": "https://laburodev-api.santiagogoncalvez.com/api/:path*" },
       { "source": "/", "destination": "/" },
       { "source": "/search", "destination": "/" },
       { "source": "/login", "destination": "/" },

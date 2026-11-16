@@ -1,12 +1,11 @@
 import { NavLink } from 'react-router';
-import { useAuthStore } from '@/store/authStore';
+import { authClient, useSession } from '@/lib/auth-client';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import { Link } from './Link';
 import { ThemeToggle } from './ThemeToggle';
 
 export function Header() {
-  // Selectores por valor: re-render solo cuando cambia lo que se usa en render
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { data: session } = useSession();
   const numberOfFavorites = useFavoritesStore(
     (state) => state.favorites.length,
   );
@@ -26,7 +25,7 @@ export function Header() {
             >
               Empleos
             </NavLink>
-            {isLoggedIn && (
+            {session && (
               <NavLink
                 className={({ isActive }) =>
                   isActive ? 'nav-link-active' : ''
@@ -49,17 +48,24 @@ export function Header() {
 }
 
 const HeaderUserButton = () => {
-  // Selectores: acciones estables (referencias fijas) no disparan renders
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  const logout = useAuthStore((state) => state.logout);
+  const { data: session, isPending } = useSession();
   const clearFavorites = useFavoritesStore((state) => state.clearFavorites);
 
-  const handleLogout = () => {
-    logout();
+  // Sin sesión definida aún: no mostramos botones (evita el parpadeo).
+  if (isPending) return null;
+
+  if (!session) {
+    return (
+      <Link href="/login" className="btn btn-ghost btn-sm">
+        Iniciar sesión
+      </Link>
+    );
+  }
+
+  const handleLogout = async () => {
+    await authClient.signOut();
     clearFavorites();
   };
-
-  if (!isLoggedIn) return null;
 
   return (
     <button

@@ -5,6 +5,7 @@ import { Header } from '@/components/Header';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { RouteFallback } from '@/components/RouteFallback';
 import { ScrollToTop } from '@/components/ScrollToTop';
+import { useFavoritesSync } from '@/hooks/useFavoritesSync';
 
 const HomePage = lazy(() => import('@/pages/Home'));
 const SearchPage = lazy(() => import('@/pages/Search'));
@@ -15,6 +16,9 @@ const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 
 function App() {
+  // Merge de favoritos (invitado → servidor) al haber sesión.
+  useFavoritesSync();
+
   return (
     <>
       <ScrollToTop />

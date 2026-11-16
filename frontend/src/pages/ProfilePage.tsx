@@ -1,9 +1,23 @@
 import { User } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
+import { authClient, useSession } from '@/lib/auth-client';
+import { useFavoritesStore } from '@/store/favoritesStore';
 import styles from './ProfilePage.module.css';
 
 export default function Profile() {
-  const { logout } = useAuthStore();
+  // ProtectedRoute solo deja renderizar con sesión cargada.
+  const { data } = useSession();
+  const user = data?.user;
+
+  const numberOfFavorites = useFavoritesStore(
+    (state) => state.favorites.length,
+  );
+  const clearFavorites = useFavoritesStore((state) => state.clearFavorites);
+
+  const handleLogout = async () => {
+    await authClient.signOut();
+    clearFavorites();
+    // ProtectedRoute detecta la sesión borrada y redirige a /login.
+  };
 
   return (
     <div
@@ -19,76 +33,33 @@ export default function Profile() {
           <div className={styles.avatar}>
             <User />
           </div>
-          <h1 className={styles.name}>Usuario Demo</h1>
-          <p className={styles.email}>usuario@ejemplo.com</p>
+          <h1 className={styles.name}>{user?.name ?? ''}</h1>
+          <p className={styles.email}>{user?.email ?? ''}</p>
         </div>
 
         <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Información Personal</h2>
+          <h2 className={styles.sectionTitle}>Cuenta</h2>
           <div className={styles.infoGrid}>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Nombre completo</span>
-              <span className={styles.infoValue}>Usuario Demo</span>
+              <span className={styles.infoValue}>{user?.name ?? '—'}</span>
             </div>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Email</span>
-              <span className={styles.infoValue}>usuario@ejemplo.com</span>
+              <span className={styles.infoValue}>{user?.email ?? '—'}</span>
             </div>
             <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Teléfono</span>
-              <span className={styles.infoValue}>+34 123 456 789</span>
+              <span className={styles.infoLabel}>Favoritos</span>
+              <span className={styles.infoValue}>{numberOfFavorites}</span>
             </div>
-            <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Ubicación</span>
-              <span className={styles.infoValue}>Madrid, España</span>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Experiencia</h2>
-          <div className={styles.experienceItem}>
-            <h3 className={styles.experienceTitle}>Desarrollador Frontend</h3>
-            <p className={styles.experienceCompany}>
-              Empresa XYZ • 2021 - Presente
-            </p>
-            <p className={styles.experienceDescription}>
-              Desarrollo de aplicaciones web con React, TypeScript y Next.js
-            </p>
-          </div>
-          <div className={styles.experienceItem}>
-            <h3 className={styles.experienceTitle}>Desarrollador Junior</h3>
-            <p className={styles.experienceCompany}>
-              Startup ABC • 2019 - 2021
-            </p>
-            <p className={styles.experienceDescription}>
-              Mantenimiento y desarrollo de features en aplicaciones legacy
-            </p>
-          </div>
-        </div>
-
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Habilidades</h2>
-          <div className={styles.skills}>
-            <span className={styles.skill}>React</span>
-            <span className={styles.skill}>TypeScript</span>
-            <span className={styles.skill}>Node.js</span>
-            <span className={styles.skill}>CSS</span>
-            <span className={styles.skill}>Git</span>
-            <span className={styles.skill}>Next.js</span>
-            <span className={styles.skill}>REST APIs</span>
-            <span className={styles.skill}>SQL</span>
           </div>
         </div>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.editButton}>
-            Editar Perfil
-          </button>
           <button
             type="button"
             className={styles.logoutButton}
-            onClick={logout}
+            onClick={handleLogout}
           >
             Cerrar Sesión
           </button>
