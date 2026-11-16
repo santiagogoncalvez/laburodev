@@ -12,6 +12,7 @@
     "test": "node --import tsx --test --test-concurrency=1",
     "db:seed": "tsx db/seed.ts",
     "db:reset": "tsx db/seed.ts --reset",
+    "db:seed:dev": "tsx db/seed-dev.ts",
     "db:seed:prod": "tsx db/seed-prod.ts"
   },
   "keywords": [],
