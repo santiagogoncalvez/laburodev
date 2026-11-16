@@ -1,12 +1,15 @@
 import "./env.js"; // PRIMERO: .env cargado antes de que config/cors/db lean process.env
+import { toNodeHandler } from "better-auth/node";
 import type { NextFunction, Request, Response } from "express";
 import express from "express";
 import helmet from "helmet";
 
+import { auth } from "./auth.js";
 import { DEFAULTS } from "./config.js";
 import { corsMiddleware } from "./middlewares/cors.js";
 import { generalLimiter } from "./middlewares/rateLimit.js";
 import { aiRouter } from "./routes/ai.js";
+import { favoritesRouter } from "./routes/favorites.js";
 import { jobsRouter } from "./routes/jobs.js";
 
 const PORT = process.env.PORT ?? DEFAULTS.PORT;
@@ -18,11 +21,15 @@ app.set("trust proxy", 1);
 // Security headers (nosniff, CSP por defecto, etc.) en todas las respuestas.
 app.use(helmet());
 app.use(corsMiddleware());
+// Better Auth ANTES de express.json(): su handler lee el body del stream crudo
+// (si express.json() lo consume primero, Better Auth no puede procesar el body).
+app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());
 app.use(generalLimiter);
 
 app.use("/jobs", jobsRouter);
 app.use("/ai", aiRouter);
+app.use("/api/favorites", favoritesRouter);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });

@@ -2,7 +2,7 @@ import cors from "cors";
 
 // Orígenes permitidos por env (separados por coma).
 // Default: solo el frontend local. En deploy: FRONTEND_URL=https://tu-front.com
-const ACCEPTED_ORIGINS: string[] = (
+export const ACCEPTED_ORIGINS: string[] = (
   process.env.FRONTEND_URL ?? "http://localhost:5173"
 )
   .split(",")

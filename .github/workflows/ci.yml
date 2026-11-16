@@ -28,6 +28,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_ENV: test
+      # Dummy para que better-auth arranque igual que en prod (en Vercel
+      # vive el valor real). Sin esto el signer de cookies no se inicializa.
+      BETTER_AUTH_SECRET: ci-dummy-secret-para-tests-no-produccion-0123456789
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -72,7 +75,9 @@ jobs:
         run: docker build -f backend/Dockerfile.vercel -t laburodev-api backend
       - name: Smoke test
         run: |
-          docker run -d --name api -p 3000:3000 laburodev-api
+          docker run -d --name api -p 3000:3000 \
+            -e BETTER_AUTH_SECRET=ci-dummy-secret-para-tests-no-produccion-0123456789 \
+            laburodev-api
           sleep 5
           curl -f http://localhost:3000/health
       - name: Container logs (si falla)
