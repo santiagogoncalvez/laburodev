@@ -4,14 +4,16 @@
 #   runner: fuente completa (para db:seed en el contenedor) + dist/ compilado.
 # ENV NODE_ENV=production: app.ts NO hace listen() (guard serverless), asi que
 # el unico que escucha es dist/server.js (compilado de server.ts).
-FROM node:24-alpine AS build
+# node:24-slim (debian/glibc) en vez de alpine: los binarios nativos precompilados
+# de @libsql no cargan en musl (alpine) — "fcntl64: symbol not found" al arrancar.
+FROM node:24-slim AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:24-alpine AS runner
+FROM node:24-slim AS runner
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
