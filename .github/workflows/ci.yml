@@ -77,9 +77,27 @@ jobs:
         run: |
           docker run -d --name api -p 3000:3000 \
             -e BETTER_AUTH_SECRET=ci-dummy-secret-para-tests-no-produccion-0123456789 \
+            -e BETTER_AUTH_URL=http://localhost:3000 \
             laburodev-api
-          sleep 5
-          curl -f http://localhost:3000/health
+          # Arranque frío con better-auth tarda ~5s: esperar hasta 60s
+          # reintentando cada 2s en vez de un sleep fijo que quedó corto.
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/health > /dev/null 2>&1; then
+              echo "health OK (intento $i):"
+              curl -fsS http://localhost:3000/health
+              echo ""
+              exit 0
+            fi
+            if [ -z "$(docker ps -q --filter 'name=^/api$')" ]; then
+              echo "El contenedor salió antes de responder:"
+              docker logs api
+              exit 1
+            fi
+            sleep 2
+          done
+          echo "La app no respondió en 60s:"
+          docker logs api
+          exit 1
       - name: Container logs (si falla)
         if: failure()
         run: docker logs api
