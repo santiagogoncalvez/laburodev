@@ -88,7 +88,7 @@ jobs:
               echo ""
               exit 0
             fi
-            if [ -z "$(docker ps -q --filter 'name=^/api$')" ]; then
+            if [ "$(docker inspect -f '{{.State.Running}}' api 2>/dev/null)" != "true" ]; then
               echo "El contenedor salió antes de responder:"
               docker logs api
               exit 1
