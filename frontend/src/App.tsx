@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router';
+import { FavoriteLoginModal } from '@/components/FavoriteLoginModal';
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -23,6 +24,7 @@ function App() {
     <>
       <ScrollToTop />
       <Header />
+      <FavoriteLoginModal />
 
       <Suspense fallback={<RouteFallback />}>
         <Routes>
