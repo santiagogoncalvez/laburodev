@@ -139,3 +139,12 @@ Dos projects separados, uno por paquete (rootDirectory configurado en cada proje
 - Frontend: `vercel.json` con rewrites de las 6 rutas conocidas (rutas desconocidas → `404.html` con status 404 real: copia del shell de la SPA que genera un plugin en `vite.config.js`); `VITE_API_URL` en build.
 - API: `FRONTEND_URL` en runtime (URLs separadas por coma, tolera slash final) para CORS, más `PORT`.
 - Variables de entorno backend: `GOOGLE_GENERATIVE_AI_API_KEY`, `MODEL_AI`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` (ver `backend/.env.example`).
+
+## Flujo de tickets SDD (Spec-Driven Development) — piloto
+
+Framework [sena-sdd](https://github.com/niic0o/sena-sdd) en piloto (rama `spike/sena-sdd`). **Opt-in**: solo se activa cuando se le pide procesar un ticket; el flujo normal de desarrollo no cambia.
+
+- **Estructura**: `.ai/` (coordinador + 5 workers), `tickets/todo/` (bandeja de entrada), `memory/` (expedientes por ticket).
+- **Para procesar un ticket**: crear `tickets/todo/T-###-kebab-case.md` (copiar de `tickets/todo/_template.md`), luego en **Modo Plan**: *"Procesa el ticket tickets/todo/T-###.md siguiendo .ai/coordinador.md"*. Revisar/aprobar el contrato en `memory/`, luego en **Modo Build**: *"Aprobado. Ejecuta el pipeline de memory/T-###.md hasta el cierre del Reviewer"*.
+- **Reglas**: los workers respetan `.ai/arquitectura.md`; el reviewer sugiere el commit pero **solo Santiago ejecuta `git commit`/`git push`**; `main` intocable.
+- El `05-reviewer` pausa antes de auditar preguntando si querés cambiar de modelo (anti-sesgo).
