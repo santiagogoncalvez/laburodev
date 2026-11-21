@@ -54,4 +54,4 @@ Este archivo centraliza todos los problemas de **LÓGICA** (no de tipado) detect
 - **Origen**: `frontend/PENDING_FIXES.md` (Grupo D).
 - **Problema**: El rewrite wildcard `path="*"` muestra la página 404 en el cliente, pero el servidor responde con 200 OK. Tampoco hay metatags OpenGraph renderizados en servidor para scrapers estáticos.
 - **Fix futuro**: Evaluar prerender/SSG de rutas o Edge Middleware en Vercel para responder 404 real y tags OpenGraph en páginas estáticas.
-- **Estado**: **pendiente** — deferido por Santiago (2026-11-11): solo si el SEO de URLs externas importa.
+- **✅ Resuelto** (2026-11-12): **404 real** — `vercel.json` ahora solo reescribe las 6 rutas conocidas; lo demás cae en `404.html` (copia del shell de la SPA que genera un plugin de 5 líneas en `vite.config.js`), que Vercel sirve con status 404 y el router pinta `NotFoundPage` con el mismo look. **og:/twitter:** metas estáticos a nivel sitio en `index.html` (sin `og:url` — sería falso fuera de la raíz; sin `og:image` — no hay asset 1200×630). Deferido: `og:` dinámico por empleo (requiere SSG/Edge real).

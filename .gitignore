@@ -29,10 +29,6 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# ── Piloto SDD (sena-sdd) — temporal, decidir al aprobar el flujo ──
-tickets/
-memory/
-
 # ── Tests / cobertura ─────────────────────────────────────────
 coverage/
 test-results/
