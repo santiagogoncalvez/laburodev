@@ -14,7 +14,8 @@ import type {
 // chequeo de "nada que actualizar". Los controllers son solo HTTP.
 export type ServiceError =
   | { ok: false; code: "invalid_input"; message: string }
-  | { ok: false; code: "not_found" };
+  | { ok: false; code: "not_found" }
+  | { ok: false; code: "forbidden" };
 
 export type ServiceResult<T> = { ok: true; data: T } | ServiceError;
 
@@ -25,6 +26,7 @@ const invalidInput = (message: string): ServiceError => ({
 });
 
 const notFound: ServiceError = { ok: false, code: "not_found" };
+const forbidden: ServiceError = { ok: false, code: "forbidden" };
 
 // Objetos planos solos: permite destructurar bodies sin `as` ni `any`.
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -65,19 +67,38 @@ export class JobService {
     return JobModel.options();
   }
 
-  static async create(body: unknown): Promise<ServiceResult<Job | null>> {
+  static async create(
+    body: unknown,
+    userId: string,
+  ): Promise<ServiceResult<Job | null>> {
     const parsed = validateJob(body);
     if (!parsed.success) {
       return invalidInput(parsed.error.issues[0].message);
     }
 
-    return { ok: true, data: await JobModel.create(parsed.data) };
+    return { ok: true, data: await JobModel.create(parsed.data, userId) };
+  }
+
+  // Ownership (Etapa B): primero 404 si no existe, después 403 si no es
+  // dueño (incluye user_id NULL = empleo del seed, solo lectura).
+  private static async checkOwnership(
+    id: string,
+    userId: string,
+  ): Promise<{ ok: true; job: Job } | ServiceError> {
+    const job = await JobModel.getById(String(id));
+    if (!job) return notFound;
+    if (job.userId !== userId) return forbidden;
+    return { ok: true, job };
   }
 
   static async update(
     id: string,
     body: unknown,
+    userId: string,
   ): Promise<ServiceResult<Job | null>> {
+    const ownership = await JobService.checkOwnership(id, userId);
+    if (!ownership.ok) return ownership;
+
     const parsed = validateJob(body);
     if (!parsed.success) {
       return invalidInput(parsed.error.issues[0].message);
@@ -90,7 +111,11 @@ export class JobService {
   static async partialUpdate(
     id: string,
     body: unknown,
+    userId: string,
   ): Promise<ServiceResult<Job | null>> {
+    const ownership = await JobService.checkOwnership(id, userId);
+    if (!ownership.ok) return ownership;
+
     const record = isRecord(body) ? body : {};
     const { title, company, location, description, data, content } = record;
 
@@ -114,7 +139,13 @@ export class JobService {
     return job ? { ok: true, data: job } : notFound;
   }
 
-  static async delete(id: string): Promise<ServiceResult<null>> {
+  static async delete(
+    id: string,
+    userId: string,
+  ): Promise<ServiceResult<null>> {
+    const ownership = await JobService.checkOwnership(id, userId);
+    if (!ownership.ok) return ownership;
+
     const deleted = await JobModel.delete(id);
     return deleted ? { ok: true, data: null } : notFound;
   }

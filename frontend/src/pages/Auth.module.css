@@ -48,6 +48,27 @@
 	border-radius: var(--r-md);
 }
 
+/* Textarea con el mismo look & feel que los inputs (T-003): mismas
+   reglas que index.css aplica a input[type=text] (bg-soft, sin borde,
+   font inherit) — sin el fondo gris ni la font mono por defecto. */
+.textarea {
+	font-family: inherit;
+	font-weight: 400;
+	font-size: var(--fs-body);
+	color: var(--text);
+	background-color: var(--bg-soft);
+	border: none;
+	border-radius: var(--r-md);
+	padding: 0.7rem 1.2rem;
+	outline: none;
+	width: 100%;
+	resize: vertical;
+}
+
+.textarea::placeholder {
+	color: var(--text-2);
+}
+
 .submitButton {
 	composes: btn btn-primary from global;
 	width: 100%;

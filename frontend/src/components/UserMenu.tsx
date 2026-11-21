@@ -43,6 +43,11 @@ export function UserMenu() {
     navigate('/profile');
   };
 
+  const handlePublish = () => {
+    setOpen(false);
+    navigate('/jobs/new');
+  };
+
   return (
     <div className="user-menu">
       <button
@@ -63,6 +68,9 @@ export function UserMenu() {
             aria-hidden="true"
           />
           <div className="user-menu-panel" role="menu">
+            <button type="button" role="menuitem" onClick={handlePublish}>
+              Publicar empleo
+            </button>
             <button type="button" role="menuitem" onClick={handleAccount}>
               Cuenta
             </button>

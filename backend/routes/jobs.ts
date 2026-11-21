@@ -1,15 +1,15 @@
 import { Router } from "express";
 import { JobController } from "@/controllers/jobs.js";
-import { writeGuard } from "@/middlewares/writeGuard.js";
 
 export const jobsRouter = Router();
 
-// GET abierto; escrituras protegidas con x-api-key (guard temporal, ver
-// middlewares/writeGuard.ts) hasta que exista auth real.
+// GET abierto (lectura pública). Escrituras: autorización por sesión +
+// ownership dentro del controller (Etapa B — x-api-key fue reemplazado;
+// middlewares/writeGuard.ts queda archivado para la Fase 3 con roles).
 jobsRouter.get("/", JobController.getAll);
 jobsRouter.get("/options", JobController.getOptions);
 jobsRouter.get("/:id", JobController.getId);
-jobsRouter.post("/", writeGuard, JobController.create);
-jobsRouter.put("/:id", writeGuard, JobController.update);
-jobsRouter.patch("/:id", writeGuard, JobController.partialUpdate);
-jobsRouter.delete("/:id", writeGuard, JobController.delete);
+jobsRouter.post("/", JobController.create);
+jobsRouter.put("/:id", JobController.update);
+jobsRouter.patch("/:id", JobController.partialUpdate);
+jobsRouter.delete("/:id", JobController.delete);

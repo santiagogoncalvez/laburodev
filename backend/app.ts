@@ -28,6 +28,9 @@ app.use(express.json());
 app.use(generalLimiter);
 
 app.use("/jobs", jobsRouter);
+// Alias same-origin (Etapa B): las escrituras con cookies de sesión viajan
+// por el proxy /api (Vite dev) y el rewrite de Vercel. Mismo router.
+app.use("/api/jobs", jobsRouter);
 app.use("/ai", aiRouter);
 app.use("/api/favorites", favoritesRouter);
 

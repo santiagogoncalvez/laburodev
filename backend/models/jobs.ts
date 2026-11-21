@@ -39,6 +39,8 @@ function mapRow(row: Row): Job {
     company: asString(row.company),
     location: asString(row.location),
     createdAt: typeof row.created_at === "string" ? row.created_at : null,
+    // Dueño (Etapa B): null = empleo del seed (solo lectura).
+    userId: typeof row.user_id === "string" ? row.user_id : null,
     data: {
       level: asString(row.level),
       modality: asString(row.modality),
@@ -152,7 +154,10 @@ export class JobModel {
     return mapRow(row);
   }
 
-  static async create(inputData: JobInput): Promise<Job | null> {
+  static async create(
+    inputData: JobInput,
+    userId: string,
+  ): Promise<Job | null> {
     const id = crypto.randomUUID();
 
     const { title, company, location, data, content } = inputData;
@@ -173,8 +178,8 @@ export class JobModel {
 
     await db.execute({
       sql: `
-            INSERT INTO jobs (id, title, company, location, level, modality, technology, description, responsibilities, requirements, about)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO jobs (id, title, company, location, level, modality, technology, description, responsibilities, requirements, about, user_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          `,
       args: [
         id,
@@ -188,6 +193,7 @@ export class JobModel {
         respStr,
         reqStr,
         about ?? "",
+        userId,
       ],
     });
 

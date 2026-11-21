@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { DEFAULTS } from "@/config.js";
+import { getSessionUserId } from "@/middlewares/session.js";
 import { JobService, type ServiceError } from "@/services/jobsService.js";
 
 // Query params de Express llegan como string | string[] | ParsedQs: en el
@@ -13,7 +14,25 @@ function sendServiceError(res: Response, error: ServiceError): Response {
   if (error.code === "not_found") {
     return res.status(404).json({ message: "Job not found" });
   }
+  if (error.code === "forbidden") {
+    return res
+      .status(403)
+      .json({ message: "No autorizado para modificar este empleo" });
+  }
   return res.status(400).json({ message: error.message });
+}
+
+// Sesión requerida para toda escritura (Etapa B): sin sesión → 401.
+async function requireUserId(
+  req: Request,
+  res: Response,
+): Promise<string | null> {
+  const userId = await getSessionUserId(req);
+  if (!userId) {
+    res.status(401).json({ message: "Sesión requerida" });
+    return null;
+  }
+  return userId;
 }
 
 // Controller delgado: parsea la petición HTTP, delega la lógica de negocio
@@ -58,7 +77,10 @@ export class JobController {
   }
 
   static async create(req: Request, res: Response) {
-    const result = await JobService.create(req.body);
+    const userId = await requireUserId(req, res);
+    if (!userId) return;
+
+    const result = await JobService.create(req.body, userId);
 
     if (!result.ok) return sendServiceError(res, result);
 
@@ -66,7 +88,10 @@ export class JobController {
   }
 
   static async update(req: Request<{ id: string }>, res: Response) {
-    const result = await JobService.update(req.params.id, req.body);
+    const userId = await requireUserId(req, res);
+    if (!userId) return;
+
+    const result = await JobService.update(req.params.id, req.body, userId);
 
     if (!result.ok) return sendServiceError(res, result);
 
@@ -74,7 +99,14 @@ export class JobController {
   }
 
   static async partialUpdate(req: Request<{ id: string }>, res: Response) {
-    const result = await JobService.partialUpdate(req.params.id, req.body);
+    const userId = await requireUserId(req, res);
+    if (!userId) return;
+
+    const result = await JobService.partialUpdate(
+      req.params.id,
+      req.body,
+      userId,
+    );
 
     if (!result.ok) return sendServiceError(res, result);
 
@@ -82,7 +114,10 @@ export class JobController {
   }
 
   static async delete(req: Request<{ id: string }>, res: Response) {
-    const result = await JobService.delete(req.params.id);
+    const userId = await requireUserId(req, res);
+    if (!userId) return;
+
+    const result = await JobService.delete(req.params.id, userId);
 
     if (!result.ok) return sendServiceError(res, result);
 
