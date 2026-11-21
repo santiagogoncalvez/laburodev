@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS jobs (
   responsibilities TEXT NOT NULL,
   requirements TEXT NOT NULL,
   about TEXT NOT NULL,
+  -- Dueño (Etapa B): NULL = empleo del seed, solo lectura para todos.
+  user_id TEXT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -1,6 +1,7 @@
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert";
 import app from "./app.js";
+import { db } from "./db/index.js";
 
 let server;
 const PORT = 3001;
@@ -9,23 +10,76 @@ const BASE_URL = `http://localhost:${PORT}`;
 let createdId;
 let validationId;
 
-// Guard de escritura (x-api-key): los tests habilitan las escrituras con una
-// key de prueba. El guard la lee POR REQUEST desde el env, así que setearla
-// acá (antes de before()) alcanza para todo el archivo.
-const WRITE_KEY = "test-write-key";
-process.env.WRITE_API_KEY = WRITE_KEY;
-const writeHeaders = { "x-api-key": WRITE_KEY };
+// Etapa B: autorización por sesión + ownership (x-api-key fue reemplazado).
+// Dos usuarios de test: el dueño escribe; el otro verifica los 403.
+const OWNER_EMAIL = "jobs-owner-test@laburodev.dev";
+const OTHER_EMAIL = "jobs-other-test@laburodev.dev";
+const TEST_PASSWORD = "password123";
+let ownerHeaders; // { "Content-Type", Cookie } — escrituras del dueño
+let otherHeaders; // { "Content-Type", Cookie } — intentos de no-dueño
+
+// Limpia los usuarios de test y sus empleos. Idempotente (corridas cortadas).
+async function cleanTestUsers() {
+   for (const email of [OWNER_EMAIL, OTHER_EMAIL]) {
+      const byEmail = 'SELECT id FROM "user" WHERE email = ?';
+      await db.execute({
+         sql: "DELETE FROM jobs WHERE user_id IN (" + byEmail + ")",
+         args: [email],
+      });
+      await db.execute({
+         sql: "DELETE FROM favorites WHERE user_id IN (" + byEmail + ")",
+         args: [email],
+      });
+      await db.execute({
+         sql: "DELETE FROM session WHERE userId IN (" + byEmail + ")",
+         args: [email],
+      });
+      await db.execute({
+         sql: "DELETE FROM account WHERE userId IN (" + byEmail + ")",
+         args: [email],
+      });
+      await db.execute({
+         sql: 'DELETE FROM "user" WHERE email = ?',
+         args: [email],
+      });
+   }
+}
+
+async function signUp(email) {
+   const response = await fetch(`${BASE_URL}/api/auth/sign-up/email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+         name: "Test Jobs",
+         email,
+         password: TEST_PASSWORD,
+      }),
+   });
+   assert.strictEqual(response.status, 200);
+   const cookie = response.headers
+      .getSetCookie()
+      .map((cookie) => cookie.split(";")[0])
+      .join("; ");
+   assert.ok(cookie, "Debe devolver la cookie de sesión");
+   return { "Content-Type": "application/json", Cookie: cookie };
+}
 
 // antes de cada test se inicia el servidor
 before(async () => {
+   await cleanTestUsers();
+
    return new Promise((resolve, reject) => {
       server = app.listen(PORT, () => resolve());
       server.on("error", reject);
+   }).then(async () => {
+      ownerHeaders = await signUp(OWNER_EMAIL);
+      otherHeaders = await signUp(OTHER_EMAIL);
    });
 });
 
 // despues de cada test se cierra el servidor
 after(async () => {
+   await cleanTestUsers();
    if (server) {
       return new Promise((resolve, reject) => {
          server.close((err) => {
@@ -200,7 +254,7 @@ describe("POST /jobs", () => {
       };
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify(body),
       });
       assert.strictEqual(response.status, 201);
@@ -215,7 +269,7 @@ describe("POST /jobs", () => {
    test("debe responder 400 sin campos obligatorios", async () => {
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({}),
       });
       assert.strictEqual(response.status, 400);
@@ -233,7 +287,7 @@ describe("PUT /jobs/:id", () => {
       };
       const res = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify(body),
       });
       const job = await res.json();
@@ -244,7 +298,7 @@ describe("PUT /jobs/:id", () => {
       // Limpieza: no dejar filas de test en la DB local
       await fetch(`${BASE_URL}/jobs/${putId}`, {
          method: "DELETE",
-         headers: { ...writeHeaders },
+         headers: { ...ownerHeaders },
       });
    });
 
@@ -258,7 +312,7 @@ describe("PUT /jobs/:id", () => {
       };
       const response = await fetch(`${BASE_URL}/jobs/${putId}`, {
          method: "PUT",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify(body),
       });
       assert.strictEqual(response.status, 200);
@@ -272,7 +326,7 @@ describe("PUT /jobs/:id", () => {
    test("debe responder 400 si faltan campos", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${createdId}`, {
          method: "PUT",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({ title: "Incompleto" }),
       });
       assert.strictEqual(response.status, 400);
@@ -281,7 +335,7 @@ describe("PUT /jobs/:id", () => {
    test("debe responder 404 con un id inexistente", async () => {
       const response = await fetch(`${BASE_URL}/jobs/no-existe`, {
          method: "PUT",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({
             title: "Xyz Developer",
             company: "X Corp",
@@ -305,7 +359,7 @@ describe("PATCH /jobs/:id", () => {
       };
       const res = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify(body),
       });
       const job = await res.json();
@@ -316,14 +370,14 @@ describe("PATCH /jobs/:id", () => {
       // Limpieza: no dejar filas de test en la DB local
       await fetch(`${BASE_URL}/jobs/${patchId}`, {
          method: "DELETE",
-         headers: { ...writeHeaders },
+         headers: { ...ownerHeaders },
       });
    });
 
    test("debe actualizar solo lo enviado", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${patchId}`, {
          method: "PATCH",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({ title: "QA Solo Título Actualizado" }),
       });
       assert.strictEqual(response.status, 200);
@@ -336,7 +390,7 @@ describe("PATCH /jobs/:id", () => {
    test("debe responder 400 sin nada para actualizar", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${createdId}`, {
          method: "PATCH",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({}),
       });
       assert.strictEqual(response.status, 400);
@@ -345,7 +399,7 @@ describe("PATCH /jobs/:id", () => {
    test("debe responder 404 con un id inexistente", async () => {
       const response = await fetch(`${BASE_URL}/jobs/no-existe`, {
          method: "PATCH",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({ title: "Xyz" }),
       });
       assert.strictEqual(response.status, 404);
@@ -356,7 +410,7 @@ describe("validaciones zod", () => {
    test("POST debe responder 400 si el título es muy corto", async () => {
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({
             title: "QA",
             company: "ACME",
@@ -377,7 +431,7 @@ describe("validaciones zod", () => {
    test("POST debe responder 400 sin tecnologías", async () => {
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({
             title: "QA Manual",
             company: "ACME",
@@ -392,7 +446,7 @@ describe("validaciones zod", () => {
    test("POST debe responder 400 con un nivel inválido", async () => {
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({
             title: "QA Manual",
             company: "ACME",
@@ -407,7 +461,7 @@ describe("validaciones zod", () => {
    test("POST debe ignorar campos desconocidos", async () => {
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({
             title: "QA Manual Tester",
             company: "ACME",
@@ -427,7 +481,7 @@ describe("validaciones zod", () => {
    test("PUT debe aceptar sin location porque es opcional", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${validationId}`, {
          method: "PUT",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({
             title: "QA Manual Updated",
             company: "ACME",
@@ -441,7 +495,7 @@ describe("validaciones zod", () => {
    test("PATCH debe aceptar data parcial anidada", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${validationId}`, {
          method: "PATCH",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({ data: { level: "senior" } }),
       });
       assert.strictEqual(response.status, 200);
@@ -454,7 +508,7 @@ describe("validaciones zod", () => {
    test("PATCH debe responder 400 con un título inválido", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${validationId}`, {
          method: "PATCH",
-         headers: { "Content-Type": "application/json", ...writeHeaders },
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
          body: JSON.stringify({ title: "x" }),
       });
       assert.strictEqual(response.status, 400);
@@ -463,7 +517,7 @@ describe("validaciones zod", () => {
    test("DELETE debe limpiar el trabajo de validación", async () => {
       const response = await fetch(`${BASE_URL}/jobs/${validationId}`, {
          method: "DELETE",
-         headers: { ...writeHeaders },
+         headers: { ...ownerHeaders },
       });
       assert.strictEqual(response.status, 204);
    });
@@ -473,7 +527,7 @@ describe("DELETE /jobs/:id", () => {
    test("debe borrar con 204 y el trabajo deja de existir", async () => {
       const deleted = await fetch(`${BASE_URL}/jobs/${createdId}`, {
          method: "DELETE",
-         headers: { ...writeHeaders },
+         headers: { ...ownerHeaders },
       });
       assert.strictEqual(deleted.status, 204);
 
@@ -484,7 +538,7 @@ describe("DELETE /jobs/:id", () => {
    test("debe responder 404 con un id inexistente", async () => {
       const response = await fetch(`${BASE_URL}/jobs/no-existe`, {
          method: "DELETE",
-         headers: { ...writeHeaders },
+         headers: { ...ownerHeaders },
       });
       assert.strictEqual(response.status, 404);
    });
@@ -539,44 +593,174 @@ describe("GET /ai/summary/:id - [AI]", () => {
    });
 });
 
-describe("writeGuard (x-api-key)", () => {
-   test("debe responder 401 en escritura sin la key", async () => {
-      const response = await fetch(`${BASE_URL}/jobs`, {
+describe("Autorización por sesión (Etapa B)", () => {
+   test("POST, PUT, PATCH y DELETE responden 401 sin sesión", async () => {
+      const post = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
          headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({}),
+         body: JSON.stringify({
+            title: "Sin sesión",
+            company: "ACME",
+            data: { technology: ["qa"], mode: "remoto", level: "junior" },
+         }),
       });
-      assert.strictEqual(response.status, 401);
+      assert.strictEqual(post.status, 401);
+
+      const put = await fetch(`${BASE_URL}/jobs/${createdId}`, {
+         method: "PUT",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+            title: "Sin sesión",
+            company: "ACME",
+            data: { technology: ["qa"], mode: "remoto", level: "junior" },
+         }),
+      });
+      assert.strictEqual(put.status, 401);
+
+      const patch = await fetch(`${BASE_URL}/jobs/${createdId}`, {
+         method: "PATCH",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ title: "Sin sesión" }),
+      });
+      assert.strictEqual(patch.status, 401);
+
+      const del = await fetch(`${BASE_URL}/jobs/${createdId}`, {
+         method: "DELETE",
+      });
+      assert.strictEqual(del.status, 401);
    });
 
-   test("debe responder 401 con una key incorrecta", async () => {
+   test("debe dejar GET abierto sin sesión", async () => {
+      const response = await fetch(`${BASE_URL}/jobs`);
+      assert.strictEqual(response.status, 200);
+   });
+
+   test("POST con sesión asigna user_id del dueño en la respuesta", async () => {
       const response = await fetch(`${BASE_URL}/jobs`, {
          method: "POST",
-         headers: { "Content-Type": "application/json", "x-api-key": "otra-key" },
-         body: JSON.stringify({}),
+         headers: ownerHeaders,
+         body: JSON.stringify({
+            title: "Job con dueño",
+            company: "ACME",
+            data: { technology: ["qa"], mode: "remoto", level: "junior" },
+         }),
       });
-      assert.strictEqual(response.status, 401);
+      assert.strictEqual(response.status, 201);
+
+      const job = await response.json();
+      assert.ok(job.userId, "Debe devolver userId asignado por el servidor");
+      createdId = job.id;
+   });
+});
+
+describe("Ownership: solo el dueño edita/borra (Etapa B)", () => {
+   let seedJobId; // empleo del seed (user_id NULL) — solo lectura
+   let ownerJobId;
+
+   before(async () => {
+      // Empleo del seed: cualquiera de la DB que no tenga dueño.
+      const list = await (await fetch(`${BASE_URL}/jobs?limit=50`)).json();
+      const seedJob = list.data.find((job) => !job.userId);
+      assert.ok(seedJob, "Debe existir al menos un empleo del seed sin user_id");
+      seedJobId = seedJob.id;
+
+      // Empleo del dueño: creado con la sesión del owner.
+      const res = await fetch(`${BASE_URL}/jobs`, {
+         method: "POST",
+         headers: ownerHeaders,
+         body: JSON.stringify({
+            title: "Empleo del dueño",
+            company: "Owner Corp",
+            data: { technology: ["react"], mode: "remoto", level: "senior" },
+         }),
+      });
+      const job = await res.json();
+      ownerJobId = job.id;
    });
 
-   test("debe responder 503 si WRITE_API_KEY no está configurada (fail-closed)", async () => {
-      const saved = process.env.WRITE_API_KEY;
-      delete process.env.WRITE_API_KEY;
-      try {
-         const response = await fetch(`${BASE_URL}/jobs`, { method: "POST" });
-         assert.strictEqual(response.status, 503);
-      } finally {
-         process.env.WRITE_API_KEY = saved;
-      }
+   after(async () => {
+      // Limpieza: el dueño borra su empleo (si el fix ya está aplicado)
+      await fetch(`${BASE_URL}/jobs/${ownerJobId}`, {
+         method: "DELETE",
+         headers: ownerHeaders,
+      });
    });
 
-   test("debe dejar GET abierto sin la key", async () => {
-      const saved = process.env.WRITE_API_KEY;
-      delete process.env.WRITE_API_KEY;
-      try {
-         const response = await fetch(`${BASE_URL}/jobs`);
-         assert.strictEqual(response.status, 200);
-      } finally {
-         process.env.WRITE_API_KEY = saved;
-      }
+   test("GET /jobs/:id devuelve userId (string | null)", async () => {
+      const seed = await (await fetch(`${BASE_URL}/jobs/${seedJobId}`)).json();
+      assert.strictEqual(seed.userId, null, "El seed no tiene dueño");
+
+      const owned = await (await fetch(`${BASE_URL}/jobs/${ownerJobId}`)).json();
+      assert.ok(typeof owned.userId === "string", "El empleo creado tiene dueño");
+   });
+
+   test("PUT de empleo ajeno responde 403", async () => {
+      const response = await fetch(`${BASE_URL}/jobs/${ownerJobId}`, {
+         method: "PUT",
+         headers: otherHeaders,
+         body: JSON.stringify({
+            title: "Intento ajeno",
+            company: "Hack Corp",
+            data: { technology: ["qa"], mode: "remoto", level: "junior" },
+         }),
+      });
+      assert.strictEqual(response.status, 403);
+   });
+
+   test("PUT de empleo del seed (sin dueño) responde 403", async () => {
+      const response = await fetch(`${BASE_URL}/jobs/${seedJobId}`, {
+         method: "PUT",
+         headers: ownerHeaders,
+         body: JSON.stringify({
+            title: "Intento sobre seed",
+            company: "Hack Corp",
+            data: { technology: ["qa"], mode: "remoto", level: "junior" },
+         }),
+      });
+      assert.strictEqual(response.status, 403);
+   });
+
+   test("DELETE de empleo ajeno responde 403", async () => {
+      const response = await fetch(`${BASE_URL}/jobs/${ownerJobId}`, {
+         method: "DELETE",
+         headers: otherHeaders,
+      });
+      assert.strictEqual(response.status, 403);
+   });
+
+   test("DELETE de empleo del seed responde 403", async () => {
+      const response = await fetch(`${BASE_URL}/jobs/${seedJobId}`, {
+         method: "DELETE",
+         headers: ownerHeaders,
+      });
+      assert.strictEqual(response.status, 403);
+   });
+
+   test("PATCH de empleo ajeno responde 403", async () => {
+      const response = await fetch(`${BASE_URL}/jobs/${ownerJobId}`, {
+         method: "PATCH",
+         headers: otherHeaders,
+         body: JSON.stringify({ title: "Intento patch ajeno" }),
+      });
+      assert.strictEqual(response.status, 403);
+   });
+
+   test("PUT y DELETE con id inexistente responden 404 (con sesión)", async () => {
+      const put = await fetch(`${BASE_URL}/jobs/no-existe`, {
+         method: "PUT",
+         headers: ownerHeaders,
+         body: JSON.stringify({
+            title: "Xyz",
+            company: "X",
+            data: { technology: ["x"], mode: "remoto", level: "junior" },
+         }),
+      });
+      assert.strictEqual(put.status, 404);
+
+      const del = await fetch(`${BASE_URL}/jobs/no-existe`, {
+         method: "DELETE",
+         headers: ownerHeaders,
+      });
+      assert.strictEqual(del.status, 404);
    });
 });

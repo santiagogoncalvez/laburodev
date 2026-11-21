@@ -15,7 +15,8 @@
 > **Proceso de registro de usuario y autorización** — cada etapa se marca acá con su detalle de ejecución. Este bloque es la fuente de verdad de lo ya hecho: las etapas siguientes deben leerlo (junto con `AGENTS.md`) antes de arrancar.
 
 - [x] **Etapa A · Migración de Auth** (email+password + favoritos en DB) — completada 2026-11-19, detalle abajo.
-- [ ] **Etapa B · RLS / Permisos en Turso/Postgres** — la definición exacta de cada etapa siguiente se acuerda al empezarla.
+- [x] **Etapa B · CRUD de empleos por propietario** — completada 2026-11-21, detalle abajo.
+- [ ] **Etapa C · Roles (recruiter/candidate), verificación de email y RLS / Permisos en Turso/Postgres** — la definición exacta de cada etapa siguiente se acuerda al empezarla.
 
 ### Etapa A — cómo se completó (2026-11-19)
 
@@ -39,6 +40,16 @@
 
 **Validación:** typecheck/lint/build en verde · tests backend 47/47 · CI verde · preview verificado de punta a punta (health, `/jobs` total=58, rewrite de auth con registro real + cookie de sesión).
 
+### Etapa B — cómo se completó (2026-11-21)
+
+**Base entregada:** autorización por sesión + ownership en POST/PUT/PATCH/DELETE `/jobs` (401 sin sesión, 403 si no es dueño, 404 si no existe) · columna `jobs.user_id TEXT NULL` asignada por el servidor (nullable = empleos del seed de solo lectura) · `x-api-key` removido de las rutas (`writeGuard` archivado para la Etapa C con roles) · alias same-origin `/api/jobs` para que la cookie viaje · frontend con formulario crear/editar controlado por estado (`/jobs/new`, `/jobs/:jobId/edit`), campos de `content` (descripción, responsabilidades, requisitos, about), botones de dueño en Detail, eliminación directa sin alertas y pantalla 404 amigable.
+
+**Diferencias vs la base del ticket:** PATCH también pasó por ownership (cerraba un hueco de seguridad) · el validador Zod quedó sin cambios (strippea cualquier `user_id` que mande el cliente) · sin FK en `user_id` (los empleos del seed no tienen usuario) · se corrigió el mapeo de `content` en el formulario y la precarga en edición tras la prueba manual (ticket T-003).
+
+**Validación:** typecheck backend/frontend en verde · lint raíz en verde · tests backend 53/53 · prueba manual de punta a punta aprobada (publicar, editar con precarga, eliminar, 404).
+
+**Seguimiento:** este trabajo se hizo con el piloto del framework SDD [sena-sdd](https://github.com/niic0o/sena-sdd) en la rama `spike/sena-sdd` (tickets T-001 a T-003, expedientes en `memory/`). Ver `AGENTS.md` → "Flujo de tickets SDD".
+
 ## BACKLOG CONDICIONADO (solo si aplica el gatillo)
 - [ ] **Migrar a npm workspaces** (1 lockfile en la raíz, instalación única, `typescript`/`@types/node` deduplicados). **Gatillo**: cuando exista código compartido real (`packages/shared` con tipos/utils) — sin eso no paga el costo (hoy el único beneficio serían ~40 MB de disco). Al migrar: rehacer install + cache en los 2 jobs de CI, `Dockerfile.vercel` (contexto → raíz + COPY de los 3 `package.json`), verificar preview en Vercel (`rootDirectory` por proyecto + lockfile en raíz) — todo sobre rama. **Turborepo**: solo si hay 5+ paquetes y el CI se pone lento; a esta escala, nunca.
 
@@ -46,3 +57,4 @@
 
 > **Nota (2026-11-13):** Rama `development` configurada para CI. Los deploys a Vercel solo ocurren en `main`.
 > **Nota (2026-11-14):** Preview URLs fijas configuradas: `laburodev-dev.vercel.app` (frontend) y `laburodev-api-dev.vercel.app` (backend). Alias creados via REST API en CI.
+> **Nota (2026-11-21):** Etapa B + pulido T-003 completados con el piloto SDD, integrados a `development` desde `spike/sena-sdd` (rama subida al remoto como registro del aprendizaje).

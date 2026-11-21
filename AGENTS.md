@@ -90,18 +90,19 @@ Frontend:
 - `app.set("trust proxy", 1)` para IPs reales detrás de proxy (Vercel).
 - **Store en memoria** (limitación conocida): los contadores son por instancia. Si el contenedor escala a N réplicas, el límite efectivo es N×100. Cuando haya más de una instancia, mover a un store compartido (p. ej. Upstash/Redis + `rate-limit-redis`).
 
-## Escritura protegida (`x-api-key`)
+## Escritura de empleos — por sesión + ownership (Etapa B)
 
-- `POST/PUT/PATCH/DELETE /jobs` exigen header `x-api-key` igual a la env `WRITE_API_KEY` (`middlewares/writeGuard.ts`, comparación timing-safe).
-- **Fail-closed**: sin `WRITE_API_KEY` configurada, las escrituras responden 503. En Vercel hay que agregarla en env vars del proyecto; en local vive en `backend/.env` (ver `.env.example`).
-- Guard **temporal** hasta la Fase 2 (roles sobre el CRUD). GET (`/jobs`, `/jobs/:id`, `/health`, `/ai/*`) sigue abierto.
+- `POST/PUT/PATCH/DELETE /jobs` (y el alias same-origin `/api/jobs`) requieren **sesión válida** (`getSessionUserId` → 401 sin sesión) y verificación de **ownership** en el service (`JobService.checkOwnership`: 404 si no existe, 403 si `job.user_id` no coincide — incluye los empleos del seed con `user_id NULL`, de solo lectura).
+- `x-api-key` fue **removido de las rutas** en la Etapa B: `middlewares/writeGuard.ts` queda archivado y sin montar, por si se reactiva en la Fase 3 (roles). `WRITE_API_KEY` ya no se lee en rutas.
+- GET (`/jobs`, `/jobs/:id`, `/health`, `/ai/*`) sigue abierto sin sesión.
+- **Columna**: `jobs.user_id TEXT NULL` (sin FK; la asigna solo el server en `POST`). Migración idempotente en `db/seed.ts`.
 
 ## Auth — Better Auth (Fase 1)
 
 Email+password sin verificación de email y sin roles (Fase 2). Misma DB que el CRUD (Turso/SQLite) vía Kysely + `@libsql/kysely-libsql` compartiendo `dbConfig` de `db/index.ts`.
 
 - **Backend**: `auth.ts` (config: `emailAndPassword.enabled`, `trustedOrigins` = allow-list de CORS). En `app.ts`: `app.all("/api/auth/*splat", toNodeHandler(auth))` montado **antes** de `express.json()` (Better Auth lee el body del stream crudo; Express 5 usa `*splat`).
-- **Rutas protegidas**: `/api/favorites` (GET/POST/DELETE). `middlewares/session.ts` expone `getSessionUserId(req) → string | null`; cada handler responde 401 si es null. No hay middleware con `req.userId` (evita tipos que mienten).
+- **Rutas protegidas**: `/api/favorites` (GET/POST/DELETE) y escrituras de `/api/jobs` (POST/PUT/PATCH/DELETE — ownership en el service; ver sección anterior). `middlewares/session.ts` expone `getSessionUserId(req) → string | null`; cada handler responde 401 si es null. No hay middleware con `req.userId` (evita tipos que mienten).
 - **Esquema**: `db/schema.sql` incluye `user`, `session`, `account`, `verification` (salidos de `getMigrations()` de Better Auth — camelCase y entre comillas; NO regenerar a mano sin correr better-auth, el runtime valida las columnas) + `favorites (id, user_id, job_id, created_at, UNIQUE(user_id, job_id))`. El seed normal (`db:seed` / `db:seed:prod`) los crea con `IF NOT EXISTS`.
 - **Env**: `BETTER_AUTH_SECRET` (con `NODE_ENV=production` falta → lanza error al arrancar) y `BETTER_AUTH_URL`. **Vercel: agregar ambas** antes del deploy (en CI se usa un dummy).
 - **Frontend (mismo origen — obligatorio por cookies)**: Vite proxy `/api` → `:3000` en dev; `vercel.json` rewrite `/api/:path*` → API **primero** en la lista. Jobs/IA siguen con `API_URL` absoluta + CORS (sin credentials).
@@ -139,3 +140,12 @@ Dos projects separados, uno por paquete (rootDirectory configurado en cada proje
 - Frontend: `vercel.json` con rewrites de las 6 rutas conocidas (rutas desconocidas → `404.html` con status 404 real: copia del shell de la SPA que genera un plugin en `vite.config.js`); `VITE_API_URL` en build.
 - API: `FRONTEND_URL` en runtime (URLs separadas por coma, tolera slash final) para CORS, más `PORT`.
 - Variables de entorno backend: `GOOGLE_GENERATIVE_AI_API_KEY`, `MODEL_AI`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` (ver `backend/.env.example`).
+
+## Flujo de tickets SDD (Spec-Driven Development) — piloto
+
+Framework [sena-sdd](https://github.com/niic0o/sena-sdd) en piloto (rama `spike/sena-sdd`). **Opt-in**: solo se activa cuando se le pide procesar un ticket; el flujo normal de desarrollo no cambia.
+
+- **Estructura**: `.ai/` (coordinador + 5 workers), `tickets/todo/` (bandeja de entrada), `memory/` (expedientes por ticket).
+- **Para procesar un ticket**: crear `tickets/todo/T-###-kebab-case.md` (copiar de `tickets/todo/_template.md`), luego en **Modo Plan**: *"Procesa el ticket tickets/todo/T-###.md siguiendo .ai/coordinador.md"*. Revisar/aprobar el contrato en `memory/`, luego en **Modo Build**: *"Aprobado. Ejecuta el pipeline de memory/T-###.md hasta el cierre del Reviewer"*.
+- **Reglas**: los workers respetan `.ai/arquitectura.md`; el reviewer sugiere el commit pero **solo Santiago ejecuta `git commit`/`git push`**; `main` intocable.
+- El `05-reviewer` pausa antes de auditar preguntando si querés cambiar de modelo (anti-sesgo).

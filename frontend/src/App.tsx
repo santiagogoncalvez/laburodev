@@ -12,6 +12,7 @@ const HomePage = lazy(() => import('@/pages/Home'));
 const SearchPage = lazy(() => import('@/pages/Search'));
 const NotFoundPage = lazy(() => import('@/pages/404'));
 const JobDetail = lazy(() => import('@/pages/Detail'));
+const JobFormPage = lazy(() => import('@/pages/JobFormPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
@@ -31,6 +32,23 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/jobs/:jobId" element={<JobDetail />} />
+          {/* CRUD por propietario (Etapa B): solo con sesión. */}
+          <Route
+            path="/jobs/new"
+            element={
+              <ProtectedRoute redirectTo="/login">
+                <JobFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/jobs/:jobId/edit"
+            element={
+              <ProtectedRoute redirectTo="/login">
+                <JobFormPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/profile"
             element={

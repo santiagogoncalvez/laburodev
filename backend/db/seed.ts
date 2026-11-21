@@ -41,6 +41,10 @@ async function seed() {
       );
       console.log("  ➕ Columna 'technology' agregada.");
     }
+    if (!columns.includes("user_id")) {
+      await db.execute("ALTER TABLE jobs ADD COLUMN user_id TEXT NULL");
+      console.log("  ➕ Columna 'user_id' agregada.");
+    }
     console.log("✅ Migración verificada.");
 
     // Crear índices después de asegurar que las columnas existan

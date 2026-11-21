@@ -1,5 +1,14 @@
 import DOMPurify from 'dompurify';
-import { Building2, Heart, Home, MapPin, Signal, Wifi } from 'lucide-react';
+import {
+  Building2,
+  Heart,
+  Home,
+  MapPin,
+  Pencil,
+  Signal,
+  Trash2,
+  Wifi,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import snarkdown from 'snarkdown';
@@ -9,6 +18,8 @@ import { Link } from '@/components/Link';
 import { API_URL } from '@/config';
 import { formatJobLevel } from '@/constants/levels';
 import { formatTechnology } from '@/constants/technologies';
+import { useSession } from '@/lib/auth-client';
+import { deleteJob } from '@/lib/jobsApi';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import type { Job } from '@/types/api';
 import styles from './Detail.module.css';
@@ -59,12 +70,68 @@ interface DetailPageHeaderProps {
   job: Job;
 }
 
+// Acciones del dueño (Etapa B): Editar y Eliminar solo si la sesión
+// coincide con job.userId. Los empleos del seed (userId null) no muestran nada.
+function DetailOwnerActions({ job }: DetailPageHeaderProps) {
+  const { data: session } = useSession();
+  const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const isOwner = session?.user?.id != null && session.user.id === job.userId;
+
+  if (!isOwner) return null;
+
+  const handleDelete = async () => {
+    // Eliminación directa (T-003): sin alertas de navegador.
+    setDeleting(true);
+    setError(null);
+    try {
+      await deleteJob(job.id);
+      navigate('/search');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo eliminar');
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className={styles.ownerActions}>
+      <button
+        type="button"
+        className={styles.ownerButton}
+        onClick={() => navigate(`/jobs/${job.id}/edit`)}
+      >
+        <Pencil size={16} aria-hidden="true" />
+        Editar
+      </button>
+      <button
+        type="button"
+        className={`${styles.ownerButton} ${styles.ownerButtonDanger}`}
+        onClick={handleDelete}
+        disabled={deleting}
+      >
+        <Trash2 size={16} aria-hidden="true" />
+        {deleting ? 'Eliminando…' : 'Eliminar'}
+      </button>
+      {error && (
+        <p className={styles.ownerError} role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function DetailPageHeader({ job }: DetailPageHeaderProps) {
   return (
     <header className={styles.header}>
       <div className={styles.titleRow}>
         <h1 className={styles.title}>{job.title}</h1>
-        <DetailFavoriteButton jobId={job.id} />
+        <div className={styles.titleActions}>
+          <DetailOwnerActions job={job} />
+          <DetailFavoriteButton jobId={job.id} />
+        </div>
       </div>
       <div className="meta-row">
         <span className="meta-item">
@@ -134,6 +201,7 @@ export default function JobDetail() {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     // PENDING_FIXES [Detail]: AbortController + flag de cancelación + !ok corta
@@ -145,8 +213,14 @@ export default function JobDetail() {
           signal: controller.signal,
         });
 
+        // 404 (T-003): empleo inexistente o eliminado → estado amigable.
+        if (response.status === 404) {
+          setNotFound(true);
+          return;
+        }
+
         if (!response.ok) {
-          navigate('/not-found');
+          setError('No se pudo cargar el empleo');
           return;
         }
 
@@ -167,7 +241,7 @@ export default function JobDetail() {
     loadJob();
 
     return () => controller.abort();
-  }, [jobId, navigate]);
+  }, [jobId]);
 
   if (loading) {
     return (
@@ -181,12 +255,39 @@ export default function JobDetail() {
     );
   }
 
+  // Empleo no encontrado (T-003): tarjeta amigable con acceso a la búsqueda.
+  if (notFound) {
+    return (
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
+        <title>Empleo no encontrado · laburoDev</title>
+        <div className={styles.error}>
+          <h2 className={styles.errorTitle}>Empleo no encontrado</h2>
+          <p
+            style={{
+              color: 'var(--text-2)',
+              margin: 'var(--space-2) 0 var(--space-5)',
+            }}
+          >
+            El empleo que buscás no existe o fue eliminado.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/search')}
+            className={styles.errorButton}
+          >
+            Volver a la búsqueda
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (error || !job) {
     return (
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
-        <title>Oferta no encontrada · laburoDev</title>
+        <title>Error al cargar · laburoDev</title>
         <div className={styles.error}>
-          <h2 className={styles.errorTitle}>Oferta no encontrada</h2>
+          <h2 className={styles.errorTitle}>No se pudo cargar el empleo</h2>
           <button
             type="button"
             onClick={() => navigate('/')}

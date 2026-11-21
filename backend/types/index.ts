@@ -23,6 +23,8 @@ export interface Job {
   company: string;
   location: string;
   createdAt: string | null;
+  /** Dueño (Etapa B). null = empleo del seed, solo lectura. */
+  userId: string | null;
   data: JobData;
   content: JobContent;
 }
