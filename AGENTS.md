@@ -90,18 +90,19 @@ Frontend:
 - `app.set("trust proxy", 1)` para IPs reales detrás de proxy (Vercel).
 - **Store en memoria** (limitación conocida): los contadores son por instancia. Si el contenedor escala a N réplicas, el límite efectivo es N×100. Cuando haya más de una instancia, mover a un store compartido (p. ej. Upstash/Redis + `rate-limit-redis`).
 
-## Escritura protegida (`x-api-key`)
+## Escritura de empleos — por sesión + ownership (Etapa B)
 
-- `POST/PUT/PATCH/DELETE /jobs` exigen header `x-api-key` igual a la env `WRITE_API_KEY` (`middlewares/writeGuard.ts`, comparación timing-safe).
-- **Fail-closed**: sin `WRITE_API_KEY` configurada, las escrituras responden 503. En Vercel hay que agregarla en env vars del proyecto; en local vive en `backend/.env` (ver `.env.example`).
-- Guard **temporal** hasta la Fase 2 (roles sobre el CRUD). GET (`/jobs`, `/jobs/:id`, `/health`, `/ai/*`) sigue abierto.
+- `POST/PUT/PATCH/DELETE /jobs` (y el alias same-origin `/api/jobs`) requieren **sesión válida** (`getSessionUserId` → 401 sin sesión) y verificación de **ownership** en el service (`JobService.checkOwnership`: 404 si no existe, 403 si `job.user_id` no coincide — incluye los empleos del seed con `user_id NULL`, de solo lectura).
+- `x-api-key` fue **removido de las rutas** en la Etapa B: `middlewares/writeGuard.ts` queda archivado y sin montar, por si se reactiva en la Fase 3 (roles). `WRITE_API_KEY` ya no se lee en rutas.
+- GET (`/jobs`, `/jobs/:id`, `/health`, `/ai/*`) sigue abierto sin sesión.
+- **Columna**: `jobs.user_id TEXT NULL` (sin FK; la asigna solo el server en `POST`). Migración idempotente en `db/seed.ts`.
 
 ## Auth — Better Auth (Fase 1)
 
 Email+password sin verificación de email y sin roles (Fase 2). Misma DB que el CRUD (Turso/SQLite) vía Kysely + `@libsql/kysely-libsql` compartiendo `dbConfig` de `db/index.ts`.
 
 - **Backend**: `auth.ts` (config: `emailAndPassword.enabled`, `trustedOrigins` = allow-list de CORS). En `app.ts`: `app.all("/api/auth/*splat", toNodeHandler(auth))` montado **antes** de `express.json()` (Better Auth lee el body del stream crudo; Express 5 usa `*splat`).
-- **Rutas protegidas**: `/api/favorites` (GET/POST/DELETE). `middlewares/session.ts` expone `getSessionUserId(req) → string | null`; cada handler responde 401 si es null. No hay middleware con `req.userId` (evita tipos que mienten).
+- **Rutas protegidas**: `/api/favorites` (GET/POST/DELETE) y escrituras de `/api/jobs` (POST/PUT/PATCH/DELETE — ownership en el service; ver sección anterior). `middlewares/session.ts` expone `getSessionUserId(req) → string | null`; cada handler responde 401 si es null. No hay middleware con `req.userId` (evita tipos que mienten).
 - **Esquema**: `db/schema.sql` incluye `user`, `session`, `account`, `verification` (salidos de `getMigrations()` de Better Auth — camelCase y entre comillas; NO regenerar a mano sin correr better-auth, el runtime valida las columnas) + `favorites (id, user_id, job_id, created_at, UNIQUE(user_id, job_id))`. El seed normal (`db:seed` / `db:seed:prod`) los crea con `IF NOT EXISTS`.
 - **Env**: `BETTER_AUTH_SECRET` (con `NODE_ENV=production` falta → lanza error al arrancar) y `BETTER_AUTH_URL`. **Vercel: agregar ambas** antes del deploy (en CI se usa un dummy).
 - **Frontend (mismo origen — obligatorio por cookies)**: Vite proxy `/api` → `:3000` en dev; `vercel.json` rewrite `/api/:path*` → API **primero** en la lista. Jobs/IA siguen con `API_URL` absoluta + CORS (sin credentials).

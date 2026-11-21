@@ -11,7 +11,9 @@
 - [x] Verificación de middleware `writeGuard` (`x-api-key`) en todos los endpoints de modificación de empleos.
 
 ## FASE 3: Autenticación Real y Persistencia (Roadmap Futuro)
-- [ ] Migración de Auth (módulos mock de Zustand a auth real).
+- [x] Migración de Auth (módulos mock de Zustand a auth real) — **Etapa A** completada: Better Auth email+password, sesiones con cookies mismo origen, favoritos sincronizados con el server.
+- [x] **Etapa B — CRUD de empleos por propietario** completada (2026-11-21): autorización por sesión + ownership en POST/PUT/PATCH/DELETE `/jobs` (401/403/404), `x-api-key` removido de las rutas (guard archivado para Fase 3 con roles), alias same-origin `/api/jobs`, formulario crear/editar (`/jobs/new`, `/jobs/:jobId/edit`) controlado por estado con campos de `content`, botones de dueño en Detail, eliminación directa y pantalla 404 amigable. Detalle: `memory/T-002-etapa-b-crud-propietario.md` y `memory/T-003-pulido-ui-formulario-empleos.md`.
+- [ ] **Etapa C — Roles (recruiter/candidate)**, verificación de email y reactivación de `writeGuard` sobre el CRUD.
 - [ ] Implementación de RLS / Permisos en Turso/Postgres.
 
 ## BACKLOG CONDICIONADO (solo si aplica el gatillo)
@@ -21,3 +23,4 @@
 
 > **Nota (2026-11-13):** Rama `development` configurada para CI. Los deploys a Vercel solo ocurren en `main`.
 > **Nota (2026-11-14):** Preview URLs fijas configuradas: `laburodev-dev.vercel.app` (frontend) y `laburodev-api-dev.vercel.app` (backend). Alias creados via REST API en CI.
+> **Nota (2026-11-21):** Etapa B + pulido T-003 completados en la rama `spike/sena-sdd` (piloto del framework SDD sena-sdd). Pendiente: merge a `development` cuando cierre el piloto.
