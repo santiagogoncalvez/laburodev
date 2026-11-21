@@ -1,9 +1,8 @@
 # ESTADO ACTUAL DEL SISTEMA
 
-- **Ticket Activo:** T-003-pulido-ui-formulario-empleos.md
-- **Expediente de Memoria:** `memory/T-003-pulido-ui-formulario-empleos.md`
-- **Categoría (Triage):** BUGFIX
-- **Fase Actual:** ESPERANDO_REVISION_HUMANA (05-reviewer APROBADO, falta prueba manual de Santiago)
+- **Ticket Activo:** ninguno (T-001, T-002, T-003 cerrados en `tickets/done/`)
+- **Piloto SDD:** CERRADO (evaluación entregada a Santiago 2026-11-21)
+- **Fase Actual:** POST_PILOTO — pendiente: decisión de merge `spike/sena-sdd` → `development` (Santiago decide; sin push durante el piloto)
 
 ## Última Acción Registrada
-04-implementador: 5 fixes de T-003 implementados (form controlado con content completo, textarea con estilo de input, eliminación directa sin alerta, 404 amigable en Detail, JobFormInput sin description top-level). Validación en verde: typecheck backend ✅, typecheck frontend ✅, lint raíz exit 0 ✅, npm test 53/53 ✅. 05-reviewer: APROBADO (Secciones 5 y 6 completadas). Siguiente: prueba manual de Santiago → cierre T-003 → ROADMAP/AGENTS → commits → evaluación final del framework SDD.
+Coordinador: T-003 aprobado y cerrado. ROADMAP.md y AGENTS.md actualizados. Commits atómicos: `14b506c` feat(jobs), `0ed3606` docs, `5f92426` chore(ai). Evaluación final del framework + mensaje para el autor (Nicolás Ariel Sena) + propuestas de mejora (alta de tickets por chat, auto-triage de tamaño) entregados por chat.
