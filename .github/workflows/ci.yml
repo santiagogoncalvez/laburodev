@@ -192,6 +192,21 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      # T-004: migrar el esquema ANTES de desplegar. Solo agrega columnas/índices:
+      # nunca borra datos ni corre jobs.json. Si falla, el job falla y no hay deploy.
+      - name: Migrate schema (Turso DEV)
+        run: npm run db:migrate:dev
+        working-directory: backend
+        env:
+          TURSO_DATABASE_URL_DEV: ${{ secrets.TURSO_DATABASE_URL_DEV }}
+          TURSO_AUTH_TOKEN_DEV: ${{ secrets.TURSO_AUTH_TOKEN_DEV }}
       - name: Instalar Vercel CLI
         run: npm install --global vercel@latest
       - name: Vincular proyecto (entorno preview)
@@ -228,6 +243,21 @@ jobs:
       PRODUCTION_URL: https://laburodev-api.santiagogoncalvez.com
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      # T-004: misma migración aditiva en producción. NUNCA se hace seed/reset
+      # automático en prod. Si falla, el job falla y no hay deploy.
+      - name: Migrate schema (Turso PROD)
+        run: npm run db:migrate:prod
+        working-directory: backend
+        env:
+          TURSO_DATABASE_URL_PROD: ${{ secrets.TURSO_DATABASE_URL_PROD }}
+          TURSO_AUTH_TOKEN_PROD: ${{ secrets.TURSO_AUTH_TOKEN_PROD }}
       - name: Instalar Vercel CLI
         run: npm install --global vercel@latest
       - name: Validar token contra el proyecto

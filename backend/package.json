@@ -13,7 +13,10 @@
     "db:seed": "tsx db/seed.ts",
     "db:reset": "tsx db/seed.ts --reset",
     "db:seed:dev": "tsx db/seed-dev.ts",
-    "db:seed:prod": "tsx db/seed-prod.ts"
+    "db:seed:prod": "tsx db/seed-prod.ts",
+    "db:migrate": "tsx db/seed.ts --schema-only",
+    "db:migrate:dev": "tsx db/seed-dev.ts --schema-only",
+    "db:migrate:prod": "tsx db/seed-prod.ts --schema-only"
   },
   "keywords": [],
   "author": "",

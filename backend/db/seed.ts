@@ -11,8 +11,18 @@ const toArray = (value: unknown): unknown[] =>
 
 async function seed() {
   try {
+    const schemaOnly = process.argv.includes("--schema-only");
+    const reset = process.argv.includes("--reset");
+
+    if (schemaOnly && reset) {
+      console.error(
+        "No se pueden combinar --schema-only y --reset: el migrate nunca borra datos.",
+      );
+      process.exit(1);
+    }
+
     // Reset: solo para aprendizaje/curso — recrea todo desde cero
-    if (process.argv.includes("--reset")) {
+    if (reset) {
       console.log("⚠️  Modo reset: eliminando tabla jobs...");
       await db.execute("DROP TABLE IF EXISTS jobs");
       console.log("🗑️  Tabla eliminada.");
@@ -58,6 +68,13 @@ async function seed() {
       "CREATE INDEX IF NOT EXISTS idx_jobs_modality ON jobs(modality)",
     );
     console.log("✅ Índices creados/verificados.");
+
+    if (schemaOnly) {
+      console.log(
+        "✅ Esquema verificado (modo --schema-only, sin tocar datos).",
+      );
+      return;
+    }
 
     console.log("⏳ Importando datos desde jobs.json...");
     const jsonPath = path.resolve("jobs.json");

@@ -1,8 +1,9 @@
 # ESTADO ACTUAL DEL SISTEMA
 
-- **Ticket Activo:** ninguno (T-001, T-002, T-003 cerrados en `tickets/done/`)
-- **Piloto SDD:** CERRADO (evaluación entregada a Santiago 2026-11-21)
-- **Fase Actual:** POST_PILOTO — pendiente: decisión de merge `spike/sena-sdd` → `development` (Santiago decide; sin push durante el piloto)
+- **Ticket Activo:** T-004 (`tickets/todo/T-004-migracion-automatica-db-ci.md`) — migración automática de esquema en CI + separación migrate/seed
+- **Piloto SDD:** CERRADO y mergeado a `development` (`9f11172`); rama `spike/sena-sdd` subida al remoto como registro
+- **Fase Actual:** SDD T-004 — **LISTO_PARA_COMMIT**. Contrato aprobado, 03-tester (RED 54/6) → 04-implementador (GREEN 60/60) → 05-reviewer **APROBADO** (mismo modelo, Santiago lo confirmó). Typecheck, lint y frontend build OK. Escenario 4 verificado en preview: `POST /api/jobs` → 201.
+- **Pendiente externo:** cargar 4 secrets en GitHub (`TURSO_DATABASE_URL_DEV`, `TURSO_AUTH_TOKEN_DEV`, `TURSO_DATABASE_URL_PROD`, `TURSO_AUTH_TOKEN_PROD`) ANTES de pushear; Santiago ejecuta commit/push a `development`. `main` intacto.
 
 ## Última Acción Registrada
-Coordinador: T-003 aprobado y cerrado. ROADMAP.md y AGENTS.md actualizados. Commits atómicos: `14b506c` feat(jobs), `0ed3606` docs, `5f92426` chore(ai). Evaluación final del framework + mensaje para el autor (Nicolás Ariel Sena) + propuestas de mejora (alta de tickets por chat, auto-triage de tamaño) entregados por chat.
+Coordinador: T-004 cerrado. Fix inmediato aplicado (`npm run db:migrate:dev` agregó `user_id` en Turso dev sin borrar datos); `/health` OK, `/jobs` 200 y POST con sesión → 201 en la preview. El CI ya migra antes del deploy en dev y prod, sin seed/reset automáticos. Documentación y expediente actualizados. Commit sugerido: `fix(db): migra el esquema antes de cada deploy y separa migrate del seed`. Solo Santiago ejecuta `git commit` / `git push`.

@@ -16,6 +16,7 @@ Toda la documentación, planes de trabajo, notas de arquitectura y entregables d
 - `frontend/` — Vite + React 19 + SWC + Zustand + React Router v7 + Streamdown. Entry: `src/main.tsx` → `src/App.tsx`. **100% TypeScript** (`npm run typecheck` = `tsc -b`, también corre en CI vía `build`).
 - `backend/` — Express 5 + **TypeScript** + Zod + Vercel AI SDK (`ai`, `@ai-sdk/google`). Entry: `app.ts` (`npm run build` → `dist/`). Capas: `routes/` → `controllers/` → `services/` → `models/` → `db/`.
 - **Persistencia**: Turso (libSQL) vía `@libsql/client`. Sin `TURSO_DATABASE_URL` cae a SQLite local (`file:local.db`). `jobs.json` ya no es la fuente de datos de la API: es el dataset de origen del seed. Credenciales de prod en `backend/.env` con sufijo `_PROD` (`TURSO_DATABASE_URL_PROD` / `TURSO_AUTH_TOKEN_PROD`): nunca se cargan solas; re-seedear prod con `npm run db:seed:prod`.
+- **Migraciones (T-004)**: el esquema se migra **automáticamente antes de cada deploy** (`db:migrate:dev` en preview, `db:migrate:prod` en producción). Es aditivo e idempotente: agrega columnas/índices, nunca borra datos; si falla, el deploy no se ejecuta. `db:seed` / `db:reset` siguen siendo **manuales** (contra prod, solo si Santiago lo pide expresamente). Cambios destructivos de esquema: en dev se aplican a mano; en prod requieren script planeado con respaldo. `--schema-only --reset` se rechaza con error.
 
 ## Comandos
 
@@ -30,6 +31,9 @@ npm test               # node --import tsx --test (corre TODOS los *.test.js; ts
 npm run db:seed        # tsx db/seed.ts — crea esquema + importa jobs.json (correr antes que los tests si la DB está vacía)
 npm run db:reset       # dropea la tabla y vuelve a seedear
 npm run db:seed:prod   # seed contra Turso PROD — inyecta TURSO_*_PROD del .env como TURSO_* antes de correr el seed
+npm run db:migrate     # migrate local: solo esquema/columnas/índices (sin DELETE, sin DROP, sin jobs.json)
+npm run db:migrate:dev # migrate contra Turso DEV (inyecta TURSO_*_DEV) — corre en CI antes del deploy de preview
+npm run db:migrate:prod # migrate contra Turso PROD — corre en CI antes del deploy; nunca seed/reset automático en prod
 
 # Docker (desde laburodev/backend/)
 docker build -f Dockerfile.vercel -t laburodev-api . # imagen que usan CI y Vercel (build tsc + CMD node dist/server.js, ENV NODE_ENV=production)

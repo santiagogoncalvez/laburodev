@@ -39,6 +39,8 @@ Referencia rápida de cómo funciona el flujo completo: Git, Vercel, Turso y age
 
 **Credenciales prod:** `TURSO_DATABASE_URL_PROD` / `TURSO_AUTH_TOKEN_PROD` en `backend/.env`. Nunca se cargan solas. Re-seedear prod con `npm run db:seed:prod`.
 
+**Migraciones automáticas (T-004):** antes de cada deploy el CI corre `npm run db:migrate:dev` (preview) o `npm run db:migrate:prod` (producción). Solo agrega columnas/índices; **no borra datos**. Si el migrate falla, el job falla y **el deploy no se ejecuta**. Los secrets `TURSO_DATABASE_URL_DEV`, `TURSO_AUTH_TOKEN_DEV`, `TURSO_DATABASE_URL_PROD` y `TURSO_AUTH_TOKEN_PROD` se cargan en GitHub Actions (mismo valor que `backend/.env`). Seed y reset siguen siendo manuales: en producción **nunca** se ejecutan automáticamente.
+
 ---
 
 ## 🔄 Flujo completo
@@ -55,6 +57,7 @@ GitHub Actions corre:
   ├── typecheck ✅
   ├── tests ✅
   ├── build ✅
+  ├── migrate esquema Turso DEV ✅  (antes del deploy, sin borrar datos)
   ├── deploy preview frontend → laburodev-dev.vercel.app ✅
   └── deploy preview backend  → laburodev-api-dev.vercel.app ✅
         │
@@ -72,11 +75,9 @@ git push origin main
 GitHub Actions corre todo de nuevo:
   ├── lint ✅
   ├── tests ✅
+  ├── migrate esquema Turso PROD ✅  (antes del deploy, nunca seed/reset automático)
   ├── deploy producción frontend → laburodev.vercel.app 🚀
   └── deploy producción backend  → laburodev-api.santiagogoncalvez.com 🚀
-        │
-        ▼
-Turso producción recibe los cambios (seed si es necesario)
 ```
 
 ---
