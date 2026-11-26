@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { authClient, useSession } from '@/lib/auth-client';
 import { useFavoritesStore } from '@/store/favoritesStore';
+import { getUserRole } from '@/types/api';
 import { Link } from './Link';
 
 export function UserMenu() {
@@ -10,6 +11,9 @@ export function UserMenu() {
   const clearFavorites = useFavoritesStore((state) => state.clearFavorites);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const isRecruiter = session
+    ? getUserRole(session.user) === 'recruiter'
+    : false;
 
   useEffect(() => {
     if (!open) return;
@@ -68,9 +72,11 @@ export function UserMenu() {
             aria-hidden="true"
           />
           <div className="user-menu-panel" role="menu">
-            <button type="button" role="menuitem" onClick={handlePublish}>
-              Publicar empleo
-            </button>
+            {isRecruiter && (
+              <button type="button" role="menuitem" onClick={handlePublish}>
+                Publicar empleo
+              </button>
+            )}
             <button type="button" role="menuitem" onClick={handleAccount}>
               Cuenta
             </button>

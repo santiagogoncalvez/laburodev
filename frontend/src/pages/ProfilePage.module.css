@@ -105,6 +105,12 @@
 	composes: badge from global;
 }
 
+.roleError {
+	color: var(--danger);
+	font-size: var(--fs-small);
+	margin-top: var(--space-3);
+}
+
 .actions {
 	display: flex;
 	gap: var(--space-3);

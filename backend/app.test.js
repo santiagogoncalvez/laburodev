@@ -10,17 +10,20 @@ const BASE_URL = `http://localhost:${PORT}`;
 let createdId;
 let validationId;
 
-// Etapa B: autorización por sesión + ownership (x-api-key fue reemplazado).
-// Dos usuarios de test: el dueño escribe; el otro verifica los 403.
+// Etapas B y C: sesión + ownership + rol (x-api-key fue reemplazado).
+// Tres usuarios de test: el dueño escribe, el otro verifica los 403 de
+// ownership y el candidate verifica los 403 de rol.
 const OWNER_EMAIL = "jobs-owner-test@laburodev.dev";
 const OTHER_EMAIL = "jobs-other-test@laburodev.dev";
+const CANDIDATE_EMAIL = "jobs-candidate-test@laburodev.dev";
 const TEST_PASSWORD = "password123";
-let ownerHeaders; // { "Content-Type", Cookie } — escrituras del dueño
-let otherHeaders; // { "Content-Type", Cookie } — intentos de no-dueño
+let ownerHeaders; // { "Content-Type", Cookie } — escrituras del dueño (recruiter)
+let otherHeaders; // { "Content-Type", Cookie } — recruiter no dueño
+let candidateHeaders; // { "Content-Type", Cookie } — candidate sin permiso de escritura
 
 // Limpia los usuarios de test y sus empleos. Idempotente (corridas cortadas).
 async function cleanTestUsers() {
-   for (const email of [OWNER_EMAIL, OTHER_EMAIL]) {
+   for (const email of [OWNER_EMAIL, OTHER_EMAIL, CANDIDATE_EMAIL]) {
       const byEmail = 'SELECT id FROM "user" WHERE email = ?';
       await db.execute({
          sql: "DELETE FROM jobs WHERE user_id IN (" + byEmail + ")",
@@ -45,7 +48,7 @@ async function cleanTestUsers() {
    }
 }
 
-async function signUp(email) {
+async function signUp(email, role = "recruiter") {
    const response = await fetch(`${BASE_URL}/api/auth/sign-up/email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -53,6 +56,7 @@ async function signUp(email) {
          name: "Test Jobs",
          email,
          password: TEST_PASSWORD,
+         role,
       }),
    });
    assert.strictEqual(response.status, 200);
@@ -74,6 +78,7 @@ before(async () => {
    }).then(async () => {
       ownerHeaders = await signUp(OWNER_EMAIL);
       otherHeaders = await signUp(OTHER_EMAIL);
+      candidateHeaders = await signUp(CANDIDATE_EMAIL, "candidate");
    });
 });
 
@@ -762,5 +767,180 @@ describe("Ownership: solo el dueño edita/borra (Etapa B)", () => {
          headers: ownerHeaders,
       });
       assert.strictEqual(del.status, 404);
+   });
+});
+
+
+describe("Roles: solo recruiter publica y administra (Etapa C)", () => {
+   const ROLE_MESSAGE = "Se necesita rol recruiter para publicar empleos";
+   const OWNERSHIP_MESSAGE = "No autorizado para modificar este empleo";
+   const CANDIDATE_TITLE = "T005 intento de publicación de candidate";
+
+   async function countWithTitle(title) {
+      const result = await db.execute({
+         sql: "SELECT count(*) AS total FROM jobs WHERE title = ?",
+         args: [title],
+      });
+      return Number(result.rows[0].total);
+   }
+
+   async function createAsRecruiter(title) {
+      const response = await fetch(`${BASE_URL}/jobs`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
+         body: JSON.stringify({
+            title,
+            company: "Owner Corp",
+            data: { technology: ["react"], mode: "remoto", level: "senior" },
+         }),
+      });
+      const text = await response.text();
+      assert.strictEqual(response.status, 201, text);
+      return JSON.parse(text);
+   }
+
+   test("candidate con sesión no puede publicar y no inserta fila", async () => {
+      const response = await fetch(`${BASE_URL}/jobs`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json", ...candidateHeaders },
+         body: JSON.stringify({
+            title: CANDIDATE_TITLE,
+            company: "Candidate Corp",
+            data: { technology: ["qa"], mode: "remoto", level: "junior" },
+         }),
+      });
+      assert.strictEqual(response.status, 403);
+      const json = await response.json();
+      assert.strictEqual(json.message, ROLE_MESSAGE);
+      assert.strictEqual(
+         await countWithTitle(CANDIDATE_TITLE),
+         0,
+         "Un candidate no debe insertar empleos",
+      );
+   });
+
+   test("candidate no puede editar ni borrar un empleo ajeno", async () => {
+      const job = await createAsRecruiter("T005 empleo para intentos de candidate");
+      try {
+         const put = await fetch(`${BASE_URL}/jobs/${job.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", ...candidateHeaders },
+            body: JSON.stringify({
+               title: "T005 overwrite",
+               company: "Candidate Corp",
+               data: { technology: ["qa"], mode: "remoto", level: "junior" },
+            }),
+         });
+         assert.strictEqual(put.status, 403);
+         assert.strictEqual((await put.json()).message, ROLE_MESSAGE);
+
+         const patch = await fetch(`${BASE_URL}/jobs/${job.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", ...candidateHeaders },
+            body: JSON.stringify({ title: "T005 patch" }),
+         });
+         assert.strictEqual(patch.status, 403);
+         assert.strictEqual((await patch.json()).message, ROLE_MESSAGE);
+
+         const del = await fetch(`${BASE_URL}/jobs/${job.id}`, {
+            method: "DELETE",
+            headers: candidateHeaders,
+         });
+         assert.strictEqual(del.status, 403);
+         assert.strictEqual((await del.json()).message, ROLE_MESSAGE);
+
+         const stillThere = await fetch(`${BASE_URL}/jobs/${job.id}`);
+         assert.strictEqual(stillThere.status, 200, "El empleo no debe borrarse");
+      } finally {
+         await fetch(`${BASE_URL}/jobs/${job.id}`, {
+            method: "DELETE",
+            headers: ownerHeaders,
+         });
+      }
+   });
+
+   test("recruiter publica, edita y borra sus propios empleos", async () => {
+      const job = await createAsRecruiter("T005 recruiter publica y administra");
+      const owner = await db.execute({
+         sql: 'SELECT id FROM "user" WHERE email = ?',
+         args: [OWNER_EMAIL],
+      });
+      assert.strictEqual(job.userId, owner.rows[0].id);
+
+      const patch = await fetch(`${BASE_URL}/jobs/${job.id}`, {
+         method: "PATCH",
+         headers: { "Content-Type": "application/json", ...ownerHeaders },
+         body: JSON.stringify({ title: "T005 recruiter editó" }),
+      });
+      assert.strictEqual(patch.status, 200);
+      assert.strictEqual((await patch.json()).title, "T005 recruiter editó");
+
+      const del = await fetch(`${BASE_URL}/jobs/${job.id}`, {
+         method: "DELETE",
+         headers: ownerHeaders,
+      });
+      assert.strictEqual(del.status, 204);
+   });
+
+   test("recruiter no dueño recibe 403 de ownership, no de rol", async () => {
+      const job = await createAsRecruiter("T005 empleo ajeno para recruiter");
+      try {
+         const response = await fetch(`${BASE_URL}/jobs/${job.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", ...otherHeaders },
+            body: JSON.stringify({ title: "T005 intento ajeno" }),
+         });
+         assert.strictEqual(response.status, 403);
+         assert.strictEqual((await response.json()).message, OWNERSHIP_MESSAGE);
+      } finally {
+         await fetch(`${BASE_URL}/jobs/${job.id}`, {
+            method: "DELETE",
+            headers: ownerHeaders,
+         });
+      }
+   });
+
+   test("la lectura sigue abierta para candidate y para anónimos", async () => {
+      const anonymous = await fetch(`${BASE_URL}/jobs?limit=1`);
+      assert.strictEqual(anonymous.status, 200);
+
+      const loggedIn = await fetch(`${BASE_URL}/jobs?limit=1`, {
+         headers: candidateHeaders,
+      });
+      assert.strictEqual(loggedIn.status, 200);
+   });
+});
+
+describe("Perfil: candidate puede pasar a recruiter (Etapa C)", () => {
+   test("update-user con role persiste y habilita la publicación", async () => {
+      const updated = await fetch(`${BASE_URL}/api/auth/update-user`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json", ...candidateHeaders },
+         body: JSON.stringify({ name: "Test Jobs", role: "recruiter" }),
+      });
+      assert.strictEqual(updated.status, 200, await updated.text());
+
+      const session = await (await fetch(`${BASE_URL}/api/auth/get-session`, {
+         headers: candidateHeaders,
+      })).json();
+      assert.strictEqual(session.user.role, "recruiter");
+
+      const published = await fetch(`${BASE_URL}/jobs`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json", ...candidateHeaders },
+         body: JSON.stringify({
+            title: "T005 candidate ascendido",
+            company: "New Recruiter Corp",
+            data: { technology: ["qa"], mode: "remoto", level: "junior" },
+         }),
+      });
+      assert.strictEqual(published.status, 201);
+      const job = await published.json();
+      assert.strictEqual(job.userId, session.user.id);
+
+      await fetch(`${BASE_URL}/jobs/${job.id}`, {
+         method: "DELETE",
+         headers: candidateHeaders,
+      });
    });
 });

@@ -40,8 +40,8 @@ Proyecto dividido en dos paquetes independientes (sin workspaces):
 ## 4. Próximos Pasos (Pendientes)
 
 1. ~~Migración de `jobs.json` a base de datos~~ → **hecho** (Turso/libSQL). Pendiente real: evaluar si se necesita PostgreSQL/Turso remoto en producción (hoy puede correr con `local.db`) y definir estrategia de migraciones de esquema.
-2. **PRIORIDAD SIGUIENTE: Autenticación / roles para reclutadores** (crear/editar ofertas). Hoy login/register/profile son **mock local con Zustand**, sin backend de auth. Mientras tanto los escritos ya están protegidos con el guard temporal `x-api-key` (§7): al implementar auth real, reemplazar el guard y setear/retirar `WRITE_API_KEY` en Vercel (decisión de Santiago: sin ella las escrituras responden 503 — el frontend no escribe, cero impacto).
-3. Ampliar cobertura de tests unitarios en el Backend (hoy: `app.test.js` — CRUD, filtros, paginación, validaciones, IA, guard).
+2. ~~**Autenticación / roles para reclutadores**~~ → **hecho**: Etapa A (Better Auth real, sin mock) + Etapa B (CRUD por dueño) + Etapa C (roles `candidate`/`recruiter`, permisos en servidor y UI mínima). El guard `x-api-key` **no se reactivó**; `WRITE_API_KEY` quedó sin uso y se puede retirar de Vercel cuando Santiago quiera. Sin verificación de email (fuera del alcance acordado).
+3. Ampliar cobertura de tests unitarios en el Backend (hoy: `app.test.js` — CRUD, filtros, paginación, validaciones, IA, sesión, ownership y roles; `migrate-schema.test.js` — migrate aditivo).
 4. ~~Roadmap completo en `../Roadmap.txt`~~ → **el archivo no existe** en esa ruta; recuperar el roadmap original si se necesita (6 etapas: SQL → Node/TS → KIO → libros → arquitectura/calidad → ORM).
 5. ~~Migración a TypeScript del backend~~ → **hecho** (2026-11-09, ver §7).
 6. ~~Revisión experta + hardening del backend~~ → **hecho** (2026-11-09, `c09c132`, ver §7).

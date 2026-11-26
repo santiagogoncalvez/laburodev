@@ -55,6 +55,16 @@ async function seed() {
       await db.execute("ALTER TABLE jobs ADD COLUMN user_id TEXT NULL");
       console.log("  ➕ Columna 'user_id' agregada.");
     }
+    // Etapa C: los usuarios ya existentes reciben 'candidate' por defecto.
+    const userTableInfo = await db.execute('PRAGMA table_info("user")');
+    const userColumns = userTableInfo.rows.map((r) => r.name);
+
+    if (!userColumns.includes("role")) {
+      await db.execute(
+        'ALTER TABLE "user" ADD COLUMN "role" TEXT NOT NULL DEFAULT \'candidate\'',
+      );
+      console.log("  ➕ Columna 'role' agregada a user.");
+    }
     console.log("✅ Migración verificada.");
 
     // Crear índices después de asegurar que las columnas existan

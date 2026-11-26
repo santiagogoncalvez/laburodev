@@ -6,6 +6,7 @@ import type {
   GetAllParams,
   Job,
   PaginatedJobsResponse,
+  UserRole,
 } from "@/types/index.js";
 
 // Resultado del servicio con CÓDIGOS DE DOMINIO, no estados HTTP: el
@@ -15,7 +16,7 @@ import type {
 export type ServiceError =
   | { ok: false; code: "invalid_input"; message: string }
   | { ok: false; code: "not_found" }
-  | { ok: false; code: "forbidden" };
+  | { ok: false; code: "forbidden"; message: string };
 
 export type ServiceResult<T> = { ok: true; data: T } | ServiceError;
 
@@ -26,7 +27,19 @@ const invalidInput = (message: string): ServiceError => ({
 });
 
 const notFound: ServiceError = { ok: false, code: "not_found" };
-const forbidden: ServiceError = { ok: false, code: "forbidden" };
+const forbidden: ServiceError = {
+  ok: false,
+  code: "forbidden",
+  message: "No autorizado para modificar este empleo",
+};
+
+// Etapa C: el rol se chequea ANTES del ownership para que un candidate
+// reciba siempre el mensaje de permiso, aunque el empleo sea ajeno.
+const forbiddenRole: ServiceError = {
+  ok: false,
+  code: "forbidden",
+  message: "Se necesita rol recruiter para publicar empleos",
+};
 
 // Objetos planos solos: permite destructurar bodies sin `as` ni `any`.
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -70,7 +83,10 @@ export class JobService {
   static async create(
     body: unknown,
     userId: string,
+    role: UserRole,
   ): Promise<ServiceResult<Job | null>> {
+    if (role !== "recruiter") return forbiddenRole;
+
     const parsed = validateJob(body);
     if (!parsed.success) {
       return invalidInput(parsed.error.issues[0].message);
@@ -95,7 +111,10 @@ export class JobService {
     id: string,
     body: unknown,
     userId: string,
+    role: UserRole,
   ): Promise<ServiceResult<Job | null>> {
+    if (role !== "recruiter") return forbiddenRole;
+
     const ownership = await JobService.checkOwnership(id, userId);
     if (!ownership.ok) return ownership;
 
@@ -112,7 +131,10 @@ export class JobService {
     id: string,
     body: unknown,
     userId: string,
+    role: UserRole,
   ): Promise<ServiceResult<Job | null>> {
+    if (role !== "recruiter") return forbiddenRole;
+
     const ownership = await JobService.checkOwnership(id, userId);
     if (!ownership.ok) return ownership;
 
@@ -142,7 +164,10 @@ export class JobService {
   static async delete(
     id: string,
     userId: string,
+    role: UserRole,
   ): Promise<ServiceResult<null>> {
+    if (role !== "recruiter") return forbiddenRole;
+
     const ownership = await JobService.checkOwnership(id, userId);
     if (!ownership.ok) return ownership;
 

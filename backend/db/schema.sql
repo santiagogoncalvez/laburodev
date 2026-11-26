@@ -24,7 +24,9 @@ CREATE TABLE IF NOT EXISTS "user" (
   "emailVerified" INTEGER NOT NULL,
   "image" TEXT,
   "createdAt" DATE NOT NULL,
-  "updatedAt" DATE NOT NULL
+  "updatedAt" DATE NOT NULL,
+  -- Etapa C: candidate por defecto; recruiter puede publicar empleos.
+  "role" TEXT NOT NULL DEFAULT 'candidate'
 );
 
 CREATE TABLE IF NOT EXISTS "session" (

@@ -32,11 +32,11 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/jobs/:jobId" element={<JobDetail />} />
-          {/* CRUD por propietario (Etapa B): solo con sesión. */}
+          {/* CRUD por propietario (Etapa B) + rol recruiter (Etapa C). */}
           <Route
             path="/jobs/new"
             element={
-              <ProtectedRoute redirectTo="/login">
+              <ProtectedRoute redirectTo="/login" requiredRole="recruiter">
                 <JobFormPage />
               </ProtectedRoute>
             }
@@ -44,7 +44,7 @@ function App() {
           <Route
             path="/jobs/:jobId/edit"
             element={
-              <ProtectedRoute redirectTo="/login">
+              <ProtectedRoute redirectTo="/login" requiredRole="recruiter">
                 <JobFormPage />
               </ProtectedRoute>
             }

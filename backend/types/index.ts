@@ -1,6 +1,9 @@
 // Tipos base compartidos por toda la capa de negocio (service → controller → rutas).
 // Los tipos de ENTRADA (lo que valida Zod) se derivan con z.infer en schemas/jobs.ts.
 
+/** Roles de la Etapa C: candidate busca; recruiter además publica empleos. */
+export type UserRole = "candidate" | "recruiter";
+
 /** Sección `data` de un empleo tal como responde la API. */
 export interface JobData {
   level: string;

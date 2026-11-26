@@ -5,6 +5,22 @@
 // se actualiza este archivo. Futuro: monorepo con packages/shared
 // (ver PLAN-TYPESCRIPT.md / HANDOFF.md §4.8).
 
+/** Rol del usuario (Etapa C): espejo del additionalField de Better Auth. */
+export type UserRole = 'candidate' | 'recruiter';
+
+/**
+ * Lee el rol de un usuario de sesión sin casts: cualquier valor inesperado
+ * se trata como candidate (un rol raro nunca habilita publicación).
+ */
+export function getUserRole(user: unknown): UserRole {
+  return typeof user === 'object' &&
+    user !== null &&
+    'role' in user &&
+    user.role === 'recruiter'
+    ? 'recruiter'
+    : 'candidate';
+}
+
 /** Sección `data` de un empleo en la respuesta de la API. */
 export interface JobData {
   level: string;

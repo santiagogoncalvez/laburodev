@@ -22,8 +22,21 @@ export const auth = betterAuth({
   // Vercel rewrite en prod, Vite proxy en dev → el Host que ve el backend
   // es el suyo, no el del frontend).
   trustedOrigins: ACCEPTED_ORIGINS,
-  // Fase 1: email+password básico. Sin verificación de email ni roles.
+  // Etapa A: email+password. Sin verificación de email (Etapa C: rol abajo).
   emailAndPassword: {
     enabled: true,
+  },
+  // Etapa C: rol en la tabla user. Valores fuera de los dos permitidos
+  // se normalizan a candidate antes de guardarse (fail-safe).
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        defaultValue: "candidate",
+        transform: {
+          input: (value) => (value === "recruiter" ? "recruiter" : "candidate"),
+        },
+      },
+    },
   },
 });

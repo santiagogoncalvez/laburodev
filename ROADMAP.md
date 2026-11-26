@@ -16,7 +16,7 @@
 
 - [x] **Etapa A · Migración de Auth** (email+password + favoritos en DB) — completada 2026-11-19, detalle abajo.
 - [x] **Etapa B · CRUD de empleos por propietario** — completada 2026-11-21, detalle abajo.
-- [ ] **Etapa C · Roles (recruiter/candidate), verificación de email y RLS / Permisos en Turso/Postgres** — la definición exacta de cada etapa siguiente se acuerda al empezarla.
+- [x] **Etapa C · Roles y permisos de publicación** — completada 2026-11-26, detalle abajo. La verificación de email quedó fuera del alcance acordado.
 
 ### Etapa A — cómo se completó (2026-11-19)
 
@@ -42,13 +42,29 @@
 
 ### Etapa B — cómo se completó (2026-11-21)
 
-**Base entregada:** autorización por sesión + ownership en POST/PUT/PATCH/DELETE `/jobs` (401 sin sesión, 403 si no es dueño, 404 si no existe) · columna `jobs.user_id TEXT NULL` asignada por el servidor (nullable = empleos del seed de solo lectura) · `x-api-key` removido de las rutas (`writeGuard` archivado para la Etapa C con roles) · alias same-origin `/api/jobs` para que la cookie viaje · frontend con formulario crear/editar controlado por estado (`/jobs/new`, `/jobs/:jobId/edit`), campos de `content` (descripción, responsabilidades, requisitos, about), botones de dueño en Detail, eliminación directa sin alertas y pantalla 404 amigable.
+**Base entregada:** autorización por sesión + ownership en POST/PUT/PATCH/DELETE `/jobs` (401 sin sesión, 403 si no es dueño, 404 si no existe) · columna `jobs.user_id TEXT NULL` asignada por el servidor (nullable = empleos del seed de solo lectura) · `x-api-key` removido de las rutas (`writeGuard` archivado y NO reactivado en la Etapa C: se resolvió con rol + sesión + ownership) · alias same-origin `/api/jobs` para que la cookie viaje · frontend con formulario crear/editar controlado por estado (`/jobs/new`, `/jobs/:jobId/edit`), campos de `content` (descripción, responsabilidades, requisitos, about), botones de dueño en Detail, eliminación directa sin alertas y pantalla 404 amigable.
 
 **Diferencias vs la base del ticket:** PATCH también pasó por ownership (cerraba un hueco de seguridad) · el validador Zod quedó sin cambios (strippea cualquier `user_id` que mande el cliente) · sin FK en `user_id` (los empleos del seed no tienen usuario) · se corrigió el mapeo de `content` en el formulario y la precarga en edición tras la prueba manual (ticket T-003).
 
 **Validación:** typecheck backend/frontend en verde · lint raíz en verde · tests backend 53/53 · prueba manual de punta a punta aprobada (publicar, editar con precarga, eliminar, 404).
 
 **Seguimiento:** este trabajo se hizo con el piloto del framework SDD [sena-sdd](https://github.com/niic0o/sena-sdd) en la rama `spike/sena-sdd` (tickets T-001 a T-003, expedientes en `memory/`). Ver `AGENTS.md` → "Flujo de tickets SDD".
+
+### Etapa C — cómo se completó (2026-11-26)
+
+**Base entregada por el plan:** roles `recruiter`/`candidate`, verificación de email y RLS/permisos en Turso/Postgres. **Alcance acordado al arrancar:** solo roles + permisos; la verificación de email queda para otro grupo (no hay proveedor de correos definido).
+
+**Adaptación al estado real (pedido explícito de Santiago):** la Etapa B ya había eliminado `x-api-key`/`writeGuard`, reemplazado el auth mock por Better Auth real, puesto el ownership por `user_id` y T-004 había dejado el migrate automático antes de cada deploy. Por eso:
+
+1. `writeGuard` sigue archivado y **no se reactiva**; `WRITE_API_KEY` no se lee en rutas.
+2. Los permisos se apoyan en la sesión real y en el ownership existente: rol primero (403 "Se necesita rol recruiter…"), dueño después (403 de ownership). `candidate` solo busca y guarda favoritos; `recruiter` publica y administra **sus** empleos.
+3. `"user"."role" TEXT NOT NULL DEFAULT 'candidate'` se agrega con el migrate aditivo de T-004 (sin borrar filas, sin backfill, sin seed en prod). Los usuarios ya existentes necesitan subir a recruiter desde el Perfil para volver a publicar.
+4. UI mínima en archivos existentes: casilla en el registro, "Rol" en el Perfil con botón de subida de ida, "Publicar empleo" solo para recruiter y guarda de rutas con `requiredRole` (Biome no permite prop `role` por ser atributo ARIA).
+5. Sin panel de admin, sin downgrade y sin verificación de email: el rol habilita funciones en un proyecto de aprendizaje, no es una barrera de seguridad de producción.
+
+**Validación:** backend typecheck en verde · 63 tests backend sin IA en verde (6 escenarios nuevos + regresión de B y T-004) · frontend build en verde · lint raíz con solo la warning preexistente de `Home.module.css`. Falta la verificación de punta a punta en preview después del deploy.
+
+**Estado del plan:** con A, B y C cerradas no quedan más features planeadas; de acá en adelante solo pulido general y el backlog condicionado.
 
 ## BACKLOG CONDICIONADO (solo si aplica el gatillo)
 - [ ] **Migrar a npm workspaces** (1 lockfile en la raíz, instalación única, `typescript`/`@types/node` deduplicados). **Gatillo**: cuando exista código compartido real (`packages/shared` con tipos/utils) — sin eso no paga el costo (hoy el único beneficio serían ~40 MB de disco). Al migrar: rehacer install + cache en los 2 jobs de CI, `Dockerfile.vercel` (contexto → raíz + COPY de los 3 `package.json`), verificar preview en Vercel (`rootDirectory` por proyecto + lockfile en raíz) — todo sobre rama. **Turborepo**: solo si hay 5+ paquetes y el CI se pone lento; a esta escala, nunca.

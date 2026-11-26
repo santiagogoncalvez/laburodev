@@ -94,24 +94,25 @@ Frontend:
 - `app.set("trust proxy", 1)` para IPs reales detrás de proxy (Vercel).
 - **Store en memoria** (limitación conocida): los contadores son por instancia. Si el contenedor escala a N réplicas, el límite efectivo es N×100. Cuando haya más de una instancia, mover a un store compartido (p. ej. Upstash/Redis + `rate-limit-redis`).
 
-## Escritura de empleos — por sesión + ownership (Etapa B)
+## Escritura de empleos — por sesión + rol + ownership (Etapas B y C)
 
-- `POST/PUT/PATCH/DELETE /jobs` (y el alias same-origin `/api/jobs`) requieren **sesión válida** (`getSessionUserId` → 401 sin sesión) y verificación de **ownership** en el service (`JobService.checkOwnership`: 404 si no existe, 403 si `job.user_id` no coincide — incluye los empleos del seed con `user_id NULL`, de solo lectura).
-- `x-api-key` fue **removido de las rutas** en la Etapa B: `middlewares/writeGuard.ts` queda archivado y sin montar, por si se reactiva en la Fase 3 (roles). `WRITE_API_KEY` ya no se lee en rutas.
+- `POST/PUT/PATCH/DELETE /jobs` (y el alias same-origin `/api/jobs`) requieren **sesión válida** (401 sin sesión), **rol `recruiter`** (403 "Se necesita rol recruiter para publicar empleos") y verificación de **ownership** en el service (`JobService.checkOwnership`: 404 si no existe, 403 si `job.user_id` no coincide — incluye los empleos del seed con `user_id NULL`, de solo lectura). El rol se chequea **antes** del ownership; `candidate` no puede escribir aunque sea dueño.
+- `x-api-key` fue **removido de las rutas** en la Etapa B: `middlewares/writeGuard.ts` queda archivado y sin montar. La Etapa C **no lo reactivó**: el control es rol + sesión + ownership. `WRITE_API_KEY` ya no se lee en rutas (se puede retirar de Vercel cuando Santiago quiera; no bloquea nada).
 - GET (`/jobs`, `/jobs/:id`, `/health`, `/ai/*`) sigue abierto sin sesión.
 - **Columna**: `jobs.user_id TEXT NULL` (sin FK; la asigna solo el server en `POST`). Migración idempotente en `db/seed.ts`.
+- **Rol (Etapa C)**: `"user"."role" TEXT NOT NULL DEFAULT 'candidate'`, declarado también como `additionalFields` en `auth.ts` (transform: cualquier valor raro → `candidate`). La migra el mismo `--schema-only` de T-004; sin backfill ni seed en prod.
 
 ## Auth — Better Auth (Fase 1)
 
-Email+password sin verificación de email y sin roles (Fase 2). Misma DB que el CRUD (Turso/SQLite) vía Kysely + `@libsql/kysely-libsql` compartiendo `dbConfig` de `db/index.ts`.
+Email+password sin verificación de email (fuera de alcance) y con dos roles desde la Etapa C (`candidate` por defecto, `recruiter` opt-in). Misma DB que el CRUD (Turso/SQLite) vía Kysely + `@libsql/kysely-libsql` compartiendo `dbConfig` de `db/index.ts`.
 
 - **Backend**: `auth.ts` (config: `emailAndPassword.enabled`, `trustedOrigins` = allow-list de CORS). En `app.ts`: `app.all("/api/auth/*splat", toNodeHandler(auth))` montado **antes** de `express.json()` (Better Auth lee el body del stream crudo; Express 5 usa `*splat`).
-- **Rutas protegidas**: `/api/favorites` (GET/POST/DELETE) y escrituras de `/api/jobs` (POST/PUT/PATCH/DELETE — ownership en el service; ver sección anterior). `middlewares/session.ts` expone `getSessionUserId(req) → string | null`; cada handler responde 401 si es null. No hay middleware con `req.userId` (evita tipos que mienten).
+- **Rutas protegidas**: `/api/favorites` (GET/POST/DELETE) y escrituras de `/api/jobs` (POST/PUT/PATCH/DELETE — ownership en el service; ver sección anterior). `middlewares/session.ts` expone `getSessionIdentity(req) → { userId, role } | null` (una sola consulta; la usan las escrituras), además de `getSessionUserId` y `getSessionUserRole`. Cada handler responde 401 si es null. No hay middleware con `req.userId` (evita tipos que mienten).
 - **Esquema**: `db/schema.sql` incluye `user`, `session`, `account`, `verification` (salidos de `getMigrations()` de Better Auth — camelCase y entre comillas; NO regenerar a mano sin correr better-auth, el runtime valida las columnas) + `favorites (id, user_id, job_id, created_at, UNIQUE(user_id, job_id))`. El seed normal (`db:seed` / `db:seed:prod`) los crea con `IF NOT EXISTS`.
 - **Env**: `BETTER_AUTH_SECRET` (con `NODE_ENV=production` falta → lanza error al arrancar) y `BETTER_AUTH_URL`. **Vercel: agregar ambas** antes del deploy (en CI se usa un dummy).
 - **Frontend (mismo origen — obligatorio por cookies)**: Vite proxy `/api` → `:3000` en dev; `vercel.json` rewrite `/api/:path*` → API **primero** en la lista. Jobs/IA siguen con `API_URL` absoluta + CORS (sin credentials).
 - **Favoritos**: `favoritesStore` sigue en localStorage (clave `laburodev-favorites`) + flag `loggedIn`. `useFavoritesSync` (llamado en `App.tsx`) hace **merge local ∪ servidor** al iniciar sesión y sube los del invitado; el toggle empuja al server solo con sesión (optimista, el merge corrige). Al cerrar sesión se limpia el local.
-- **Perfil**: muestra datos reales de la sesión; las secciones demo (experiencia/habilidades) se quitaron.
+- **Perfil**: muestra datos reales de la sesión (incluye el rol); las secciones demo (experiencia/habilidades) se quitaron. Un `candidate` ve el botón "Quiero publicar empleos" (subida de ida vía `update-user`, sin downgrade ni admin). El registro tiene una casilla opcional para elegir `recruiter` desde el alta; `UserMenu` y las rutas `/jobs/new` y `/jobs/:jobId/edit` solo habilitan publicación para `recruiter` (`requiredRole` en `ProtectedRoute`, porque `role` choca con ARIA).
 
 ## Tests con agente (`frontend/ai-e2e/`)
 

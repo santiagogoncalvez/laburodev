@@ -18,6 +18,8 @@ const BACKEND_DIR = path.dirname(fileURLToPath(import.meta.url));
 const MARKER_S1 = "t004-s1-marker";
 const MARKER_S3 = "t004-s3-marker";
 const MARKER_S4 = "t004-s4-marker";
+const MARKER_S5 = "t005-role-marker-job";
+const ROLE_MARKER_EMAIL = "t005-role-marker@laburodev.dev";
 
 // Ejecuta `node --import tsx db/seed.ts [flags]` con cwd en backend/ y sin
 // TURSO_* en el entorno → cae siempre a file:local.db.
@@ -82,6 +84,11 @@ async function markerRow(id) {
 // Restaura el estado canónico (dataset de jobs.json + user_id + sin markers)
 // para no afectar los tests existentes, que comparten local.db.
 after(async () => {
+   // Limpieza del marcador de usuario de T-005 (idempotente).
+   await db.execute({
+      sql: 'DELETE FROM "user" WHERE email = ?',
+      args: [ROLE_MARKER_EMAIL],
+   });
    const { code, output } = await runSeed();
    assert.strictEqual(
       code,
@@ -201,4 +208,65 @@ test("Invariante: --schema-only es idempotente en dos corridas consecutivas", as
    assert.strictEqual(second.code, 0, "2a corrida debe salir 0: " + second.output);
    assert.strictEqual(await countJobs(), before, "Dos migraciones no alteran el estado");
    assert.ok(await markerRow("t004-idempotent-marker"), "El marcador debe sobrevivir");
+});
+
+// T-005 — Escenario 4: la columna de rol se agrega de forma aditiva.
+async function userColumns() {
+   const info = await db.execute('PRAGMA table_info("user")');
+   return info.rows.map((row) => row.name);
+}
+
+async function userCount() {
+   const result = await db.execute('SELECT count(*) AS total FROM "user"');
+   return Number(result.rows[0].total);
+}
+
+test("T-005: el migrate agrega role a user sin borrar datos y es idempotente", async () => {
+   // Dado: una base existente con usuarios/empleos y sin la columna role.
+   if ((await userColumns()).includes("role")) {
+      await db.execute('ALTER TABLE "user" DROP COLUMN "role"');
+   }
+   assert.ok(
+      !(await userColumns()).includes("role"),
+      "Setup: role debía quedar eliminada",
+   );
+
+   const now = new Date().toISOString();
+   await db.execute({
+      sql: 'DELETE FROM "user" WHERE email = ?',
+      args: [ROLE_MARKER_EMAIL],
+   });
+   await db.execute({
+      sql: `INSERT INTO "user" (id, name, email, emailVerified, image, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      args: ["t005-role-marker-id", "T005 Marker", ROLE_MARKER_EMAIL, 1, null, now, now],
+   });
+   await insertMarker(MARKER_S5);
+   const expectedUsers = await userCount();
+   const expectedJobs = await countJobs();
+
+   // Cuando: dos corridas consecutivas del migrate.
+   const first = await runSeed(["--schema-only"]);
+   const second = await runSeed(["--schema-only"]);
+
+   // Entonces: columna con default candidate, filas intactas, exit 0.
+   assert.strictEqual(first.code, 0, "1a corrida debe salir 0: " + first.output);
+   assert.strictEqual(second.code, 0, "2a corrida debe salir 0: " + second.output);
+   assert.ok(
+      (await userColumns()).includes("role"),
+      "La tabla user debe tener la columna role tras el migrate",
+   );
+   assert.strictEqual(await userCount(), expectedUsers, "No se deben borrar usuarios");
+   assert.strictEqual(await countJobs(), expectedJobs, "No se deben borrar empleos");
+   assert.ok(await markerRow(MARKER_S5), "El empleo marcador debe sobrevivir");
+
+   const marker = await db.execute({
+      sql: 'SELECT role FROM "user" WHERE email = ?',
+      args: [ROLE_MARKER_EMAIL],
+   });
+   assert.strictEqual(
+      marker.rows[0].role,
+      "candidate",
+      "Los usuarios existentes reciben el default candidate",
+   );
 });

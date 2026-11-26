@@ -13,6 +13,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default function Register() {
   const emailId = useId();
   const passwordId = useId();
+  const roleId = useId();
 
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -25,15 +26,21 @@ export default function Register() {
     const formData = new FormData(e.currentTarget);
     const email = String(formData.get(emailId) ?? '');
     const password = String(formData.get(passwordId) ?? '');
+    const role = formData.get(roleId) === 'on' ? 'recruiter' : 'candidate';
 
-    setSubmitting(true);
-    const { error: signUpError } = await authClient.signUp.email({
+    // Se arma el payload como variable: el cliente no conoce los
+    // additionalFields del servidor y el literal directo daría error de TS.
+    const payload = {
       // Better Auth exige un name en el alta: se deriva del email y el
       // usuario lo completa desde el perfil cuando quiera.
       name: email.split('@')[0],
       email,
       password,
-    });
+      role,
+    };
+
+    setSubmitting(true);
+    const { error: signUpError } = await authClient.signUp.email(payload);
     setSubmitting(false);
 
     if (signUpError) {
@@ -82,6 +89,18 @@ export default function Register() {
               minLength={8}
               required
             />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.checkboxLabel} htmlFor={roleId}>
+              <input
+                id={roleId}
+                name={roleId}
+                type="checkbox"
+                className={styles.checkbox}
+              />
+              Quiero publicar empleos
+            </label>
           </div>
 
           {error && (

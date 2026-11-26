@@ -48,6 +48,20 @@
 	border-radius: var(--r-md);
 }
 
+/* Etapa C: casilla opcional de rol en el registro. */
+.checkboxLabel {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: var(--fs-small);
+	color: var(--text-2);
+	cursor: pointer;
+}
+
+.checkbox {
+	accent-color: var(--accent);
+}
+
 /* Textarea con el mismo look & feel que los inputs (T-003): mismas
    reglas que index.css aplica a input[type=text] (bg-soft, sin borde,
    font inherit) — sin el fondo gris ni la font mono por defecto. */
