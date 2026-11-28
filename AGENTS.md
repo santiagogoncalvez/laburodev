@@ -154,3 +154,7 @@ Framework [sena-sdd](https://github.com/niic0o/sena-sdd) en piloto (rama `spike/
 - **Para procesar un ticket**: crear `tickets/todo/T-###-kebab-case.md` (copiar de `tickets/todo/_template.md`), luego en **Modo Plan**: *"Procesa el ticket tickets/todo/T-###.md siguiendo .ai/coordinador.md"*. Revisar/aprobar el contrato en `memory/`, luego en **Modo Build**: *"Aprobado. Ejecuta el pipeline de memory/T-###.md hasta el cierre del Reviewer"*.
 - **Reglas**: los workers respetan `.ai/arquitectura.md`; el reviewer sugiere el commit pero **solo Santiago ejecuta `git commit`/`git push`**; `main` intocable.
 - El `05-reviewer` pausa antes de auditar preguntando si querés cambiar de modelo (anti-sesgo).
+
+## Cambios directos (`planes/`)
+
+Para cambios chicos y bien definidos que **no** necesitan el flujo SDD: crear un plan en `planes/` con la estructura de `planes/README.md` (contexto → qué cambiar → qué NO hacer → casos borde → cómo verificar) y pasarle la ruta al agente (*"Aplicá `planes/<nombre>.md`"*). Las features nuevas o complejas siguen por tickets SDD (`tickets/todo/`, T-###). Mismas reglas de git: solo Santiago ejecuta `git commit`/`git push`.
